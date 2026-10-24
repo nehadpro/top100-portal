@@ -110,6 +110,9 @@ main{padding-block:22px 56px}
 .legend button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:2px 10px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;color:var(--ink-2)}
 .legend button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--surface));color:var(--ink);font-weight:700}
 .tbl-wrap.scroll{max-height:640px;overflow:auto}
+#unPanel{scroll-margin-top:90px}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent),var(--shadow)}100%{box-shadow:0 0 0 0 transparent,var(--shadow)}}
 @media (min-width:1021px){#fieldLegend{display:none}}
 .sec-title{display:flex;align-items:center;gap:10px;margin:30px 0 12px}
 .sec-title h2{font-size:22px;font-weight:700}
@@ -420,16 +423,11 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   <main class="wrap">
     <div class="page-head"><div><h2>الجامعات وترتيبها</h2><p>كل جامعة في قاعدة البيانات مع ترتيبها في التصنيفات الثلاثة وعدد مرشحيها.</p></div></div>
     <div class="grid g-12">
-      <div class="panel c-7">
-        <div class="panel-h"><div><h3>ترتيب أكثر 15 جامعة تمثيلاً في التصنيفات الثلاثة</h3><p class="sub">كل علامة ترتيب الجامعة في تصنيف، والخط يصل بين أفضل ترتيب وأدناه. الأقرب إلى 1 هو الأفضل</p></div>
-          <div class="legend"><span><i style="background:var(--s1);border-radius:50%"></i>QS 2026</span><span><i style="background:var(--s2);transform:rotate(45deg)"></i>THE 2026</span><span><i style="background:var(--s3)"></i>ARWU</span></div></div>
-        <div class="chart tall" id="uniDumb"></div>
-      </div>
-      <div class="panel c-5">
-        <h3>عدد الجامعات حسب الدولة</h3><p class="sub">اضغط على الدولة لتصفية الجدول</p>
-        <div class="chart tall" id="uniCountry"></div>
-      </div>
       <div class="panel c-12">
+        <div class="panel-h"><div><h3>عدد الجامعات المصنفة حسب الدولة</h3><p class="sub">اضغط على أي عمود لعرض جامعات الدولة مباشرة في الجدول أدناه</p></div></div>
+        <div class="chart" id="uniCountry"></div>
+      </div>
+      <div class="panel c-12" id="unPanel">
         <div class="filters" id="unFilters"></div>
         <div class="tbl-wrap scroll" style="margin-top:12px"><table><thead><tr id="unHead"></tr></thead><tbody id="unBody"></tbody></table></div>
       </div>
@@ -939,7 +937,7 @@ function openCandidate(id){
 
 /* ---------- universities ---------- */
 let unSort={k:'best',dir:1};
-function renderUniversities(rebuild=true){
+function renderUniversities(rebuild=true,skipCharts=false){
   const f=filt.un;
   if(rebuild){
     const countries=uniq(ALL,'country');
@@ -959,40 +957,30 @@ function renderUniversities(rebuild=true){
   $('#unBody').innerHTML=u.length?u.map(x=>`<tr class="clk" data-u="${esc(x.name)}" data-c="${esc(x.country)}"><td><b>${esc(x.name)}</b></td><td>${esc(x.country)}</td>${rkCells(x)}<td class="rk">${tierTag(x.tier)} <b>${x.best??''}</b></td><td class="rk">${x.nr}</td><td class="rk"><b>${x.n}</b></td></tr>`).join('')
     :`<tr><td colspan="8"><div class="empty"><b>لا توجد جامعات مطابقة</b></div></td></tr>`;
   $('#unBody').querySelectorAll('tr[data-u]').forEach(tr=>tr.onclick=()=>goExplore({university:tr.dataset.u,country:tr.dataset.c}));
-  if(!hasEcharts()||!rebuild)return;
-  lazy('uniDumb',renderDumbbell);
+  if(!hasEcharts()||!rebuild||skipCharts)return;
   lazy('uniCountry',renderUniCountry);
-}
-function renderDumbbell(){
-  const c=ch('uniDumb'); if(!c)return;
-  const u=uniTable(ALL).sort((a,b)=>b.n-a.n||(a.best??999)-(b.best??999)).slice(0,15);
-  const lo=u.map(x=>Math.min(...[x.qs,x.the,x.arwu].filter(v=>v!=null)));
-  const hi=u.map(x=>Math.max(...[x.qs,x.the,x.arwu].filter(v=>v!=null)));
-  const S=[['qs','QS 2026','--s1','circle'],['the','THE 2026','--s2','diamond'],['arwu','ARWU','--s3','rect']];
-  c.setOption({...base(),
-    tooltip:{...base().tooltip,trigger:'axis',axisPointer:{type:'shadow'},formatter:ps=>{const x=u[ps[0].dataIndex];return `<b>${esc(x.name)}</b> · ${x.n} مرشح<br>QS ${x.qs??'—'} · THE ${x.the??'—'} · ARWU ${x.arwu??'—'}`;}},
-    grid:{left:10,right:24,top:10,bottom:30,containLabel:true},
-    xAxis:{type:'value',min:0,max:100,interval:10,...axisStyle(),name:'المرتبة',nameLocation:'middle',nameGap:26,nameTextStyle:{color:css('--muted'),fontFamily:css('--font-body')}},
-    yAxis:{type:'category',data:u.map(x=>x.name),inverse:true,axisTick:{show:false},axisLine:{show:false},axisLabel:{color:css('--ink-2'),fontFamily:css('--font-body'),fontSize:13,width:200,overflow:'truncate'}},
-    series:[
-      {type:'bar',stack:'r',data:lo,itemStyle:{color:'transparent'},barWidth:5,silent:true,tooltip:{show:false}},
-      {type:'bar',stack:'r',data:hi.map((h,i)=>h-lo[i]),itemStyle:{color:css('--line-2'),borderRadius:3},barWidth:5,silent:true,animationDelay:i=>REDUCED?0:i*50},
-      ...S.map(([k,n,col,sym],j)=>({name:n,type:'scatter',symbol:sym,symbolSize:k==='the'?15:12,data:u.map(x=>x[k]),itemStyle:{color:css(col),borderColor:css('--surface'),borderWidth:2},
-        animationDelay:i=>REDUCED?0:400+i*50+j*120,animationEasing:'backOut'}))
-    ]},true);
-  c.off('click'); c.on('click',p=>{const x=u[p.dataIndex]; if(x) goExplore({university:x.name,country:x.country});});
 }
 function renderUniCountry(){
   const c=ch('uniCountry'); if(!c)return;
   const byC=countBy(uniTable(ALL),'country'); const cand=new Map(countBy(ALL,'country'));
-  const g2=css('--g2');
-  c.setOption({...base(),grid:{left:8,right:34,top:4,bottom:6,containLabel:true},
-    tooltip:{...base().tooltip,trigger:'item',formatter:p=>`<b>${esc(p.name)}</b><br>${p.value} جامعة · ${cand.get(p.name)||0} مرشح`},
-    xAxis:{type:'value',show:false},yAxis:{type:'category',data:byC.map(r=>r[0]),inverse:true,axisTick:{show:false},axisLine:{show:false},axisLabel:{color:css('--ink-2'),fontFamily:css('--font-body'),fontSize:13}},
-    series:[{type:'bar',barWidth:11,data:byC.map(r=>r[1]),itemStyle:{color:grad(fade(g2,.45),g2,false),borderRadius:[0,8,8,0]},
-      label:{show:true,position:'right',color:g2,fontFamily:css('--font-display'),fontWeight:800},showBackground:true,backgroundStyle:{color:css('--track'),borderRadius:8},animationDelay:i=>REDUCED?0:i*40}]
+  const narrow=c.getDom().offsetWidth<700;
+  c.setOption({...base(),
+    tooltip:{...base().tooltip,trigger:'item',formatter:p=>`<b>${esc(p.name)}</b><br>${p.value} جامعة · ${cand.get(p.name)||0} مرشح<br><span style="color:${css('--muted')}">اضغط لعرض الجامعات</span>`},
+    grid:{left:30,right:6,top:30,bottom:6,containLabel:true},
+    xAxis:{type:'category',data:byC.map(r=>r[0]),...axisStyle(),axisLabel:{interval:0,rotate:narrow?60:38,color:css('--ink-2'),fontFamily:css('--font-body'),fontSize:12}},
+    yAxis:{type:'value',show:false,splitLine:{show:false}},
+    series:[{type:'bar',barWidth:'56%',cursor:'pointer',
+      data:byC.map(([co,v],i)=>{const col=css(FIELD_VAR[i%9]);return {value:v,itemStyle:{color:grad(col,fade(col,.15)),borderRadius:[8,8,0,0]},
+        label:{show:true,position:'top',color:col,fontFamily:css('--font-display'),fontWeight:800,fontSize:15}};}),
+      emphasis:{itemStyle:{shadowBlur:12,shadowColor:'rgba(0,0,0,.2)'}},
+      animationDuration:REDUCED?0:1100,animationEasing:'backOut',animationDelay:i=>REDUCED?0:i*60}]
   },true);
-  c.off('click'); c.on('click',p=>{filt.un.country=p.name;renderUniversities();});
+  c.off('click'); c.on('click',p=>{
+    filt.un={country:p.name,system:'any',q:''}; unSort={k:'best',dir:1};
+    renderUniversities(true,true);
+    const panel=$('#unPanel'); panel.scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'start'});
+    panel.classList.remove('flash'); void panel.offsetWidth; panel.classList.add('flash');
+  });
 }
 
 /* ---------- admin: manual entry ---------- */
