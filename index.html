@@ -530,8 +530,10 @@ document.documentElement.setAttribute('lang','ar');
 const TIERS=['أفضل 10','11 - 25','26 - 50','51 - 100'];
 const FIELDS=['الهندسة','العلوم الطبيعية والرياضيات','علوم الحياة والتقنية الحيوية','التعليم واللغات','الصحة والطب','الزراعة والبيئة','الحاسب وتقنية المعلومات','الأعمال والاقتصاد','العلوم الاجتماعية والإنسانية'];
 const FIELD_VAR=['--v1','--v2','--v3','--v4','--v5','--v6','--v7','--v8','--v9'];
-const OTHER_FIELD='أخرى / غير محدد';
-const LEVELS=['دكتوراه','ما بعد الدكتوراه','ماجستير','بكالوريوس','غير محدد'];
+const LEVELS=['دكتوراه','ما بعد الدكتوراه','ماجستير','بكالوريوس'];
+/* Values that mean "unknown" are treated as empty and never shown. */
+const BLANKS=new Set(['غير محدد','اخرى غير محدد','أخرى غير محدد','اخرى','أخرى','other','na','n a','none','unknown']);
+const val=v=>{const t=String(v??'').trim(); return BLANKS.has(norm(t))||!t?'':t;};
 const SYSTEMS=[['any','أي تصنيف (أفضل ترتيب)'],['qs','QS 2026'],['the','THE 2026'],['arwu','ARWU']];
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
@@ -556,8 +558,9 @@ function enrich(id,d){
   const valid=r.filter(v=>v!=null);
   const best=valid.length?Math.min(...valid):null;
   const tier=best==null?'':best<=10?TIERS[0]:best<=25?TIERS[1]:best<=50?TIERS[2]:TIERS[3];
-  const o={id,name:d.name||'',university:d.university||'',country:d.country||'',specialization:d.specialization||'',
-    level:d.level||'غير محدد',sector:d.sector||'',field:d.field||OTHER_FIELD,qs:r[0],the:r[1],arwu:r[2],
+  const fld=val(d.field), lvl=val(d.level);
+  const o={id,name:val(d.name),university:val(d.university),country:val(d.country),specialization:val(d.specialization),
+    level:LEVELS.includes(lvl)?lvl:'',sector:val(d.sector),field:FIELDS.includes(fld)?fld:'',qs:r[0],the:r[1],arwu:r[2],
     position:d.position||'',department:d.department||'',gradUniversity:d.gradUniversity||'',gradYear:d.gradYear||null,
     linkedin:d.linkedin||'',createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
   o._t=norm([o.name,o.university,o.country,o.specialization,o.sector,o.department,o.position,o.gradUniversity,o.field].join(' '));
@@ -580,7 +583,7 @@ function match(c,f){
   return true;
 }
 const uniq=(arr,k)=>[...new Set(arr.map(x=>x[k]).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-function countBy(arr,k){const m=new Map();for(const x of arr){const v=x[k]||'—';m.set(v,(m.get(v)||0)+1);}return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
+function countBy(arr,k){const m=new Map();for(const x of arr){const v=x[k];if(!v)continue;m.set(v,(m.get(v)||0)+1);}return [...m.entries()].sort((a,b)=>b[1]-a[1]);}
 function uniTable(arr){
   const m=new Map();
   for(const c of arr){ if(!c.university)continue;
@@ -894,7 +897,7 @@ function renderSearch(rebuild=true){
   const m=srRows(); const pages=Math.max(1,Math.ceil(m.length/SR_PS)); srPage=Math.min(srPage,pages-1);
   const slice=m.slice(srPage*SR_PS,srPage*SR_PS+SR_PS);
   $('#srCount').innerHTML=`<b>${fmt(m.length)}</b> مرشحاً مطابقاً <span class="note">من أصل ${fmt(ALL.length)}</span>`;
-  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)}</td><td><span class="lvl">${esc(c.level)}</span></td><td>${esc(c.field)}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
+  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)||'<span class="rk-none">—</span>'}</td><td>${c.level?`<span class="lvl">${esc(c.level)}</span>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
     :`<tr><td colspan="10"><div class="empty"><b>لا يوجد مرشحون مطابقون</b>جرّب كلمة أخرى أو خفّف أحد الشروط.</div></td></tr>`;
   $('#srBody').querySelectorAll('tr[data-id]').forEach(tr=>{const open=()=>openCandidate(tr.dataset.id);tr.onclick=open;tr.onkeydown=e=>{if(e.key==='Enter')open();};});
   $('#srPageInfo').textContent=m.length?`عرض ${srPage*SR_PS+1}–${Math.min(m.length,(srPage+1)*SR_PS)} من ${fmt(m.length)} · صفحة ${srPage+1} من ${pages}`:'';
@@ -920,7 +923,7 @@ function openCandidate(id){
   const row=(k,v)=>v?`<dt>${k}</dt><dd>${v}</dd>`:'';
   const host=$('#dlgHost');
   host.innerHTML=`<div class="scrim" id="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
-    <header><div style="flex:1;min-width:0"><h3 id="dlgT">${esc(c.name)}</h3><div class="note">${esc(c.position||c.specialization)}</div></div><button class="btn sm" id="dlgX" aria-label="إغلاق">إغلاق</button></header>
+    <header><div style="flex:1;min-width:0"><h3 id="dlgT">${esc(c.name)}</h3><div class="note">${esc(c.position||c.specialization||'')}</div></div><button class="btn sm" id="dlgX" aria-label="إغلاق">إغلاق</button></header>
     <div class="body">
       <div class="ranks3"><div style="--c:var(--s1)"><small>QS 2026</small><b>${c.qs??'—'}</b></div><div style="--c:var(--s2)"><small>THE 2026</small><b>${c.the??'—'}</b></div><div style="--c:var(--s3)"><small>ARWU</small><b>${c.arwu??'—'}</b></div></div>
       <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:'')}</dl>
@@ -997,7 +1000,7 @@ let editId=null, adPage=0; const AD_PS=15; let pendingDel=null;
 function setPane(p){ $('#segManual').setAttribute('aria-pressed',String(p==='manual')); $('#segExcel').setAttribute('aria-pressed',String(p==='excel')); $('#paneManual').hidden=p!=='manual'; $('#paneExcel').hidden=p!=='excel'; }
 $('#segManual').onclick=()=>setPane('manual'); $('#segExcel').onclick=()=>setPane('excel');
 function fillFormOptions(){
-  if(!$('#f-field').options.length){ $('#f-field').innerHTML=FIELDS.concat([OTHER_FIELD]).map(f=>opt(f,f,'')).join(''); $('#f-level').innerHTML=LEVELS.map(f=>opt(f,f,'دكتوراه')).join(''); }
+  if(!$('#f-field').options.length){ $('#f-field').innerHTML=opt('','اختر المجال','')+FIELDS.map(f=>opt(f,f,'')).join(''); $('#f-level').innerHTML=opt('','—','دكتوراه')+LEVELS.map(f=>opt(f,f,'دكتوراه')).join(''); }
   const dl=(id,arr)=>{$(id).innerHTML=arr.map(v=>`<option value="${esc(v)}"></option>`).join('');};
   dl('#dl-uni',uniq(ALL,'university')); dl('#dl-country',uniq(ALL,'country')); dl('#dl-sector',uniq(ALL,'sector'));
 }
@@ -1010,13 +1013,14 @@ function formData(){
   const g=id=>$('#f-'+id).value.trim();
   const num=id=>{const v=g(id);return v===''?null:Number(v);};
   return {name:g('name'),university:g('university'),country:g('country'),qs:num('qs'),the:num('the'),arwu:num('arwu'),field:g('field'),
-    sector:g('sector'),specialization:g('specialization')||'غير محدد',level:g('level')||'غير محدد',position:g('position'),
+    sector:g('sector'),specialization:g('specialization'),level:g('level'),position:g('position'),
     gradUniversity:g('gradUniversity'),gradYear:num('gradYear'),linkedin:g('linkedin')};
 }
 function validate(d){
   if(!d.name)return 'أدخل اسم المرشح.';
   if(!d.university)return 'أدخل اسم الجامعة.';
   if(!d.country)return 'أدخل الدولة.';
+  if(!d.field)return 'اختر المجال الرئيسي.';
   const r=[d.qs,d.the,d.arwu];
   if(r.some(v=>v!=null&&(!Number.isInteger(v)||v<1||v>100)))return 'الترتيب يجب أن يكون رقماً صحيحاً من 1 إلى 100.';
   if(r.every(v=>v==null))return 'أدخل ترتيب الجامعة في تصنيف واحد على الأقل (من 1 إلى 100).';
@@ -1027,7 +1031,7 @@ function resetForm(){ $('#fm').reset(); $('#f-level').value='دكتوراه'; ed
 function startEdit(id){
   const c=ALL.find(x=>x.id===id); if(!c)return; editId=id; fillFormOptions();
   for(const k of ['name','university','country','qs','the','arwu','sector','specialization','position','gradUniversity','gradYear','linkedin']) $('#f-'+k).value=c[k]??'';
-  $('#f-field').value=FIELDS.includes(c.field)?c.field:OTHER_FIELD; $('#f-level').value=LEVELS.includes(c.level)?c.level:'غير محدد';
+  $('#f-field').value=c.field||''; $('#f-level').value=c.level||'';
   $('#fmTitle').textContent='تعديل بيانات: '+c.name; $('#fmSubmit').textContent='حفظ التعديلات'; $('#fmCancel').hidden=false; $('#fmErr').textContent='';
   $('#f-name').focus(); $('#fm').scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'});
 }
@@ -1077,7 +1081,7 @@ function inferLevel(lvl,spec){
   if(/ph\.?\s?d|doctor|dphil|doctorate|دكتوراه/.test(s))return 'دكتوراه';
   if(/master|\bmsc\b|\bmba\b|ماجستير/.test(s))return 'ماجستير';
   if(/bachelor|\bbsc\b|بكالوريوس/.test(s))return 'بكالوريوس';
-  return 'غير محدد';
+  return '';
 }
 const rankOf=v=>{const m=String(v??'').match(/\d+/); if(!m)return null; const n=+m[0]; return n>=1&&n<=100?n:null;};
 const yearOf=v=>{const m=String(v??'').match(/\b(19|20)\d{2}\b/); return m?+m[0]:null;};
@@ -1129,8 +1133,9 @@ async function readExcel(file){
     const notes=[];
     const ku=d.university?knownUni(d.university):null;
     if(ku){ d.university=ku.name; if(!d.country){d.country=ku.country;notes.push('أُكملت الدولة');} if(d.qs==null&&d.the==null&&d.arwu==null){d.qs=ku.qs;d.the=ku.the;d.arwu=ku.arwu;notes.push('أُكمل الترتيب');} }
-    if(!FIELDS.includes(d.field)&&d.field!==OTHER_FIELD){ const f2=sectorField.get(norm(d.sector)); if(g('field')&&!f2)notes.push('مجال غير معروف'); d.field=f2||OTHER_FIELD; }
-    d.level=inferLevel(d.level,d.specialization); if(!d.specialization)d.specialization='غير محدد';
+    d.field=val(d.field); d.sector=val(d.sector); d.specialization=val(d.specialization);
+    if(!FIELDS.includes(d.field)){ const f2=sectorField.get(norm(d.sector))||''; if(!f2)notes.push('بدون مجال'); d.field=f2; }
+    d.level=inferLevel(val(d.level),d.specialization);
     if(d.linkedin&&!/^https?:\/\//.test(d.linkedin)&&/linkedin\.com/i.test(d.linkedin)) d.linkedin='https://'+d.linkedin;
     let st='ok', why='';
     if(!d.name){st='bad';why='الاسم مفقود';}
@@ -1147,7 +1152,7 @@ function renderXl(){
   $('#xlResult').hidden=false;
   $('#xlSummary').innerHTML=`<span class="st ok">✓ جاهز للإضافة: ${ok}</span><span class="st dup">⟳ مكرر وسيُستبعد: ${dup}</span><span class="st bad">✕ يحتاج تصحيحاً: ${bad}</span>`;
   const lab={ok:'<span class="st ok">✓ جاهز</span>',dup:'<span class="st dup">⟳ مكرر</span>',bad:'<span class="st bad">✕ خطأ</span>'};
-  $('#xlBody').innerHTML=xlRows.slice(0,500).map(r=>`<tr><td>${lab[r.st]}</td><td>${esc(r.d.name)}</td><td>${esc(r.d.university)}</td><td>${esc(r.d.country)}</td><td class="rk">${r.d.qs??'—'}</td><td class="rk">${r.d.the??'—'}</td><td class="rk">${r.d.arwu??'—'}</td><td>${esc(r.d.field)}</td><td class="note">${esc(r.why)}</td></tr>`).join('');
+  $('#xlBody').innerHTML=xlRows.slice(0,500).map(r=>`<tr><td>${lab[r.st]}</td><td>${esc(r.d.name)}</td><td>${esc(r.d.university)}</td><td>${esc(r.d.country)}</td><td class="rk">${r.d.qs??'—'}</td><td class="rk">${r.d.the??'—'}</td><td class="rk">${r.d.arwu??'—'}</td><td>${esc(r.d.field)||'<span class="rk-none">—</span>'}</td><td class="note">${esc(r.why)}</td></tr>`).join('');
   $('#xlImport').disabled=!ok; $('#xlImport').textContent=ok?`إضافة ${ok} مرشح`:'لا يوجد ما يُضاف';
   $('#xlProgress').textContent=bad?'صحّح الأسطر التي بها أخطاء في الملف وأعد رفعه، أو أضف الجاهز الآن.':'';
 }
@@ -1174,7 +1179,7 @@ function renderAdmin(){
   const m=ALL.filter(c=>!q||c._t.includes(q)).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)||a.name.localeCompare(b.name));
   const pages=Math.max(1,Math.ceil(m.length/AD_PS)); adPage=Math.min(adPage,pages-1);
   const s=m.slice(adPage*AD_PS,adPage*AD_PS+AD_PS);
-  $('#adBody').innerHTML=s.length?s.map(c=>`<tr data-id="${esc(c.id)}"><td><b>${esc(c.name)}</b></td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td>${esc(c.field)}</td>
+  $('#adBody').innerHTML=s.length?s.map(c=>`<tr data-id="${esc(c.id)}"><td><b>${esc(c.name)}</b></td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>
     <td class="rk"><div class="row" style="justify-content:center">${pendingDel===c.id?`<button class="btn sm danger" data-a="del2">تأكيد الحذف</button><button class="btn sm" data-a="nodel">تراجع</button>`:`<button class="btn sm" data-a="edit">تعديل</button><button class="btn sm danger" data-a="del">حذف</button>`}</div></td></tr>`).join('')
     :`<tr><td colspan="5"><div class="empty"><b>لا توجد نتائج</b></div></td></tr>`;
   $('#adInfo').textContent=`${fmt(m.length)} مرشح · صفحة ${adPage+1} من ${pages}`;
