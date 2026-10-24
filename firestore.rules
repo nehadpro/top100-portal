@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // المسؤول = مستخدم مسجّل له مستند باسم معرّفه (UID) داخل مجموعة admins
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // بيانات المرشحين: القراءة للجميع، والكتابة للمسؤولين فقط
+    match /shards/{shardId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // كل مستخدم يقرأ مستنده فقط للتحقق من صلاحيته، ولا أحد يكتب من الموقع
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+  }
+}
