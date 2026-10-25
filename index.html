@@ -699,27 +699,28 @@ const ICONS={
 let treeIntroDone=false, pinnedG=null;
 function renderTree(){
   const n=ALL.length, unis=uniTable(ALL), nU=unis.length, cs=countBy(ALL,'country');
-  const regs=REGIONS.map(r=>[r,cs.filter(([c])=>REGION_OF[c]===r).length,ALL.filter(x=>x.region===r).length]).filter(r=>r[1]);
+  const t10=ALL.filter(c=>c.best!=null&&c.best<=10).length, t50=ALL.filter(c=>c.best!=null&&c.best<=50).length, a3=ALL.filter(c=>c.nr===3).length;
   const G=[
-    {g:'1',icon:'people',title:'إجمالي المرشحين',value:n,split:'حسب فئة ترتيب الجامعة',kids:TIERS.map(t=>{const v=ALL.filter(x=>x.tier===t).length;
-      return {l:t,v,b:n,p:'من المرشحين',go:()=>goExplore({tier:t})};})},
-    {g:'2',icon:'uni',title:'الجامعات المصنفة',value:nU,split:'حسب عدد التصنيفات التي تظهر فيها',kids:[
-      {l:'في التصنيفات الثلاثة',v:unis.filter(u=>u.nr===3).length,b:nU,p:'من الجامعات',go:()=>goUnis('all3')},
-      {l:'في تصنيفين',v:unis.filter(u=>u.nr===2).length,b:nU,p:'من الجامعات',go:()=>goUnis('nr2')},
-      {l:'في تصنيف واحد',v:unis.filter(u=>u.nr===1).length,b:nU,p:'من الجامعات',go:()=>goUnis('nr1')}]},
-    {g:'3',icon:'globe',title:'الدول',value:cs.length,split:'حسب المنطقة الجغرافية',kids:regs.map(([r,v,m])=>(
-      {l:r,v,b:cs.length,p:`دول · ${fmt(m)} مرشح`,go:()=>goExplore({region:r})}))}
+    {g:'1',icon:'people',title:'إجمالي المرشحين',value:n,hint:'مرّر أو اضغط لعرض التفاصيل',kids:[
+      {l:'خريجو جامعات أفضل 10',v:t10,b:n,p:'من المرشحين',go:()=>goExplore({max:10})},
+      {l:'خريجو جامعات أفضل 50',v:t50,b:n,p:'من المرشحين',go:()=>goExplore({max:50})},
+      {l:'جامعاتهم في التصنيفات الثلاثة',v:a3,b:n,p:'من المرشحين',go:()=>goExplore({all3:'1'})}]},
+    {g:'2',icon:'uni',title:'الجامعات المصنفة',value:nU,hint:'مرّر أو اضغط لعرض التفاصيل',kids:[
+      {l:'ضمن أفضل 100 في QS 2026',v:unis.filter(u=>u.qs!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('qs')},
+      {l:'ضمن أفضل 100 في THE 2026',v:unis.filter(u=>u.the!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('the')},
+      {l:'ضمن أفضل 100 في ARWU 2026',v:unis.filter(u=>u.arwu!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('arwu')}]},
+    {g:'3',icon:'globe',title:'الدول',value:cs.length,hint:'مرّر أو اضغط لعرض أعلى الدول',kids:cs.slice(0,3).map(([co,v])=>(
+      {l:co,v,b:n,p:'من المرشحين',go:()=>goExplore({country:co})}))}
   ];
   const tree=$('#tree');
   const pinnedKey=pinnedG;
   tree.classList.remove('in');
   tree.innerHTML=G.map(g=>`<div class="grp" data-g="${g.g}" style="--gc:var(--g${g.g});--gs:var(--g${g.g}s);--n:${g.kids.length}">
     <button class="pcard" type="button" aria-expanded="false"><span class="ico">${ICONS[g.icon]}</span><span class="lbl">${g.title}</span><span class="val" data-to="${g.value}">${fmt(g.value)}</span>
-      <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>${g.split}</span></button>
+      <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>${g.hint}</span></button>
     <div class="conn" aria-hidden="true"></div>
     <div class="kids">${g.kids.map((k,i)=>`<button class="kcard" type="button" style="--i:${i};--w:${(k.v/(k.b||1)*100).toFixed(1)}%" data-k="${i}">
-      <span class="kl">${esc(k.l)}</span><span class="kv" data-to="${k.v}">${fmt(k.v)}</span><span class="kp">${k.b===n||k.p.startsWith('من')?pct(k.v,k.b)+' ':''}${k.p}</span><span class="kbar"><b></b></span></button>`).join('')}</div>
-    <div class="ksum">${g.kids.map(k=>fmt(k.v)).join(' + ')} = <b>${fmt(g.value)}</b></div></div>`).join('');
+      <span class="kl">${esc(k.l)}</span><span class="kv" data-to="${k.v}">${fmt(k.v)}</span><span class="kp">${pct(k.v,k.b)} ${k.p}</span><span class="kbar"><b></b></span></button>`).join('')}</div></div>`).join('');
   tree.querySelectorAll('.grp').forEach((el,gi)=>{
     const pc=el.querySelector('.pcard');
     el.addEventListener('mouseenter',()=>{ if(!pinnedG) setOn(el); });
