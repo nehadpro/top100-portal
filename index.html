@@ -269,7 +269,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 .cv-ic{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
 .cv-ic:hover,.cv-ic:focus-visible{background:color-mix(in srgb,var(--good) 22%,transparent)}
 .cv-ic svg,.cv-btn svg{flex:none}
-.ct{display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.35}
+.ct{display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-size:14px;line-height:1.35}
 .ct a{color:var(--s1);text-decoration:none;white-space:nowrap}
 .ct a:hover,.ct a:focus-visible{text-decoration:underline}
 .toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));inset-inline-start:max(18px,env(safe-area-inset-left,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:16px;box-shadow:var(--shadow)}
@@ -588,6 +588,9 @@ const cvHref=v=>{ v=String(v||'').trim(); if(!v)return ''; if(/^https?:\/\//i.te
   if(/^(www\.|1drv\.ms|[\w-]+\.(sharepoint\.com|onedrive\.live\.com|live\.com))/i.test(v))return 'https://'+v;
   try{ return new URL(v.replace(/^\/+/,''),location.href).href; }catch(e){ return v; } };
 const telHref=v=>{ const d=String(v||'').replace(/[^\d+]/g,''); return d?'tel:'+d:''; };
+const splitMulti=v=>String(v||'').split(/\s*[;,]\s*|\s+\/\s+|\s*\/\s*(?=[+0])/).map(x=>x.trim()).filter(Boolean);
+const emailLinks=v=>splitMulti(v).map(e=>`<a href="mailto:${esc(e)}" dir="ltr">${esc(e)}</a>`).join('');
+const phoneLinks=v=>splitMulti(v).map(t=>`<a href="${esc(telHref(t))}" dir="ltr">${esc(t)}</a>`).join('');
 const liHref=v=>{ v=String(v||'').trim(); return v?(/^https?:\/\//i.test(v)?v:'https://'+v):''; };
 const tierVar=t=>'--t'+(Math.max(0,TIERS.indexOf(t))+1);
 
@@ -953,7 +956,7 @@ function renderSearch(rebuild=true){
   const m=srRows(); const pages=Math.max(1,Math.ceil(m.length/SR_PS)); srPage=Math.min(srPage,pages-1);
   const slice=m.slice(srPage*SR_PS,srPage*SR_PS+SR_PS);
   $('#srCount').innerHTML=`<b>${fmt(m.length)}</b> مرشحاً مطابقاً <span class="note">من أصل ${fmt(ALL.length)}</span>`;
-  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td class="rk">${c.cv?`<a class="cv-ic" href="${esc(cvHref(c.cv))}" target="_blank" rel="noopener" aria-label="تحميل السيرة الذاتية لـ ${esc(c.name)}">${CV_ICON} تحميل</a>`:'<span class="note" style="white-space:nowrap">غير متوفرة حالياً</span>'}</td><td>${c.email||c.phone?`<div class="ct">${c.email?`<a href="mailto:${esc(c.email)}" dir="ltr">${esc(c.email)}</a>`:''}${c.phone?`<a href="${esc(telHref(c.phone))}" dir="ltr">${esc(c.phone)}</a>`:''}</div>`:'<span class="note" style="white-space:nowrap">غير متوفرة حالياً</span>'}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)||'<span class="rk-none">—</span>'}</td><td>${c.level?`<span class="lvl">${esc(c.level)}</span>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
+  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td class="rk">${c.cv?`<a class="cv-ic" href="${esc(cvHref(c.cv))}" target="_blank" rel="noopener" aria-label="تحميل السيرة الذاتية لـ ${esc(c.name)}">${CV_ICON} تحميل</a>`:'<span class="note" style="white-space:nowrap">غير متوفرة حالياً</span>'}</td><td>${c.email||c.phone?`<div class="ct">${emailLinks(c.email)}${phoneLinks(c.phone)}</div>`:'<span class="note" style="white-space:nowrap">غير متوفرة حالياً</span>'}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)||'<span class="rk-none">—</span>'}</td><td>${c.level?`<span class="lvl">${esc(c.level)}</span>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
     :`<tr><td colspan="12"><div class="empty"><b>لا يوجد مرشحون مطابقون</b>جرّب كلمة أخرى أو خفّف أحد الشروط.</div></td></tr>`;
   $('#srBody').querySelectorAll('a.cv-ic,.ct a').forEach(a=>{a.onclick=e=>e.stopPropagation();a.onkeydown=e=>e.stopPropagation();});
   $('#srBody').querySelectorAll('tr[data-id]').forEach(tr=>{const open=()=>openCandidate(tr.dataset.id);tr.onclick=open;tr.onkeydown=e=>{if(e.key==='Enter')open();};});
@@ -981,7 +984,7 @@ $('#srExport').onclick=async()=>{
     const li=liHref(c.linkedin), cv=cvHref(c.cv);
     if(li){ const a=XLSX.utils.encode_cell({r:i+1,c:LI}); ws[a].l={Target:li,Tooltip:li}; }
     if(cv){ const a=XLSX.utils.encode_cell({r:i+1,c:CV}); ws[a].l={Target:cv,Tooltip:cv}; }
-    if(c.email){ const a=XLSX.utils.encode_cell({r:i+1,c:EM}); ws[a].l={Target:'mailto:'+c.email}; }
+    if(c.email){ const a=XLSX.utils.encode_cell({r:i+1,c:EM}); ws[a].l={Target:'mailto:'+splitMulti(c.email).join(',')}; }
     if(c.phone){ const a=XLSX.utils.encode_cell({r:i+1,c:PH}); ws[a].t='s'; ws[a].v=String(c.phone); }
   });
   ws['!cols']=[30,34,16,30,14,24,26,9,9,10,10,12,24,30,10,30,18,16,20].map(w=>({wch:w}));
@@ -1006,7 +1009,7 @@ function openCandidate(id){
     <header><div style="flex:1;min-width:0"><h3 id="dlgT">${esc(c.name)}</h3><div class="note">${esc(c.position||c.specialization||'')}</div></div><button class="btn sm" id="dlgX" aria-label="إغلاق">إغلاق</button></header>
     <div class="body">
       <div class="ranks3"><div style="--c:var(--s1)"><small>QS 2026</small><b>${c.qs??'—'}</b></div><div style="--c:var(--s2)"><small>THE 2026</small><b>${c.the??'—'}</b></div><div style="--c:var(--s3)"><small>ARWU 2026</small><b>${c.arwu??'—'}</b></div></div>
-      <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:`<a class="btn sm li-btn" href="${esc(liSearch(c.name,c.university))}" target="_blank" rel="noopener">${LI_ICON} البحث في LinkedIn</a><div class="note" style="margin-top:4px">يفتح البحث باسم المرشح وجامعته في حسابك. بعد التأكد من الشخص الصحيح انسخ رابطه وألصقه من «تعديل البيانات».</div>`)}${row('البريد الإلكتروني',c.email?`<a href="mailto:${esc(c.email)}" dir="ltr">${esc(c.email)}</a>`:'<span class="note">غير متوفر حالياً</span>')}${row('رقم التواصل',c.phone?`<a href="${esc(telHref(c.phone))}" dir="ltr">${esc(c.phone)}</a>`:'<span class="note">غير متوفر حالياً</span>')}${row('السيرة الذاتية',cv?`<a class="btn sm cv-btn" href="${esc(cv)}" target="_blank" rel="noopener" download>${CV_ICON} تحميل السيرة الذاتية</a>`:'<span class="note">غير متوفرة حالياً</span>')}</dl>
+      <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:`<a class="btn sm li-btn" href="${esc(liSearch(c.name,c.university))}" target="_blank" rel="noopener">${LI_ICON} البحث في LinkedIn</a><div class="note" style="margin-top:4px">يفتح البحث باسم المرشح وجامعته في حسابك. بعد التأكد من الشخص الصحيح انسخ رابطه وألصقه من «تعديل البيانات».</div>`)}${row('البريد الإلكتروني',c.email?`<div class="ct">${emailLinks(c.email)}</div>`:'<span class="note">غير متوفر حالياً</span>')}${row('رقم التواصل',c.phone?`<div class="ct">${phoneLinks(c.phone)}</div>`:'<span class="note">غير متوفر حالياً</span>')}${row('السيرة الذاتية',cv?`<a class="btn sm cv-btn" href="${esc(cv)}" target="_blank" rel="noopener" download>${CV_ICON} تحميل السيرة الذاتية</a>`:'<span class="note">غير متوفرة حالياً</span>')}</dl>
       ${canAdmin?`<div class="row" style="margin-top:16px"><button class="btn" id="dlgEdit">تعديل البيانات</button></div>`:''}
     </div></div></div>`;
   const close=()=>{host.innerHTML='';document.removeEventListener('keydown',onKey);};
@@ -1216,7 +1219,7 @@ async function readExcel(file){
     if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.cv))d.cv='';
     if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.linkedin))d.linkedin='';
     for(const k of ['cv','email','phone','linkedin']) if(/^غير متوفرة? حاليا?ً?$/.test(d[k]))d[k]='';
-    d.email=d.email.replace(/^mailto:/i,'').trim(); if(d.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)){notes.push('بريد غير صالح تُرك فارغاً');d.email='';}
+    { const es=splitMulti(d.email.replace(/mailto:/ig,'')), okE=es.filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)); if(okE.length<es.length)notes.push('حُذف بريد غير صالح'); d.email=okE.join('; '); }
     let st='ok', why='', upd=null;
     const ex=d.name&&d.university?exist.get(norm(d.name)+'|'+norm(d.university)):null;
     if(ex){
