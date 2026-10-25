@@ -264,6 +264,11 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 .st.ok{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
 .st.dup{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
 .st.bad{color:var(--critical);background:color-mix(in srgb,var(--critical) 12%,transparent)}
+.st.upd{color:var(--s1);background:color-mix(in srgb,var(--s1) 13%,transparent)}
+.cv-btn{color:var(--good);border-color:color-mix(in srgb,var(--good) 40%,var(--line-2));text-decoration:none}
+.cv-ic{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.cv-ic:hover,.cv-ic:focus-visible{background:color-mix(in srgb,var(--good) 22%,transparent)}
+.cv-ic svg,.cv-btn svg{flex:none}
 .toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));inset-inline-start:max(18px,env(safe-area-inset-left,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:16px;box-shadow:var(--shadow)}
 .err{color:var(--critical);font-size:15px}
 .li-btn{color:#0a66c2;border-color:color-mix(in srgb,#0a66c2 35%,var(--line-2));text-decoration:none}
@@ -419,7 +424,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   <main class="wrap">
     <div class="page-head">
       <div><h2>البحث المتقدم عن المرشحين</h2></div>
-      <div class="row"><button class="btn" id="srReset">مسح الكل</button><button class="btn" id="srExport" hidden>تصدير النتائج CSV</button></div>
+      <div class="row"><button class="btn" id="srReset">مسح الكل</button><button class="btn" id="srExport" hidden>تصدير النتائج Excel</button></div>
     </div>
     <div class="panel">
       <div class="search-box"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -492,6 +497,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
             <div class="fld"><label for="f-gradUniversity">جامعة التخرج</label><input id="f-gradUniversity" list="dl-uni" autocomplete="off"></div>
             <div class="fld"><label for="f-gradYear">سنة التخرج</label><input id="f-gradYear" type="number" min="1950" max="2035" inputmode="numeric"></div>
             <div class="fld"><label for="f-linkedin">رابط LinkedIn <a href="#" id="liFind" class="note" style="font-weight:400">· البحث عنه</a></label><input id="f-linkedin" placeholder="linkedin.com/in/…" dir="ltr"></div>
+            <div class="fld"><label for="f-cv">رابط السيرة الذاتية</label><input id="f-cv" placeholder="cv/c0001.pdf أو رابط OneDrive" dir="ltr"></div>
             <div class="full row"><button class="btn pri" type="submit" id="fmSubmit">حفظ المرشح</button><span class="err" id="fmErr" role="alert"></span></div>
           </form>
         </div>
@@ -572,13 +578,18 @@ const norm=s=>String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'
 const fieldColor=f=>{const i=FIELDS.indexOf(f);return i<0?'--muted':FIELD_VAR[i];};
 const cleanName=n=>String(n||'').replace(/\b(dr|prof|professor|mr|mrs|ms|engr|eng)\b\.?/gi,' ').replace(/\s+/g,' ').trim();
 const liSearch=(name,uni)=>'https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent((cleanName(name)+' '+(uni||'')).trim());
+const CV_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
+const cvHref=v=>{ v=String(v||'').trim(); if(!v)return ''; if(/^https?:\/\//i.test(v))return v;
+  if(/^(www\.|1drv\.ms|[\w-]+\.(sharepoint\.com|onedrive\.live\.com|live\.com))/i.test(v))return 'https://'+v;
+  try{ return new URL(v.replace(/^\/+/,''),location.href).href; }catch(e){ return v; } };
+const liHref=v=>{ v=String(v||'').trim(); return v?(/^https?:\/\//i.test(v)?v:'https://'+v):''; };
 const tierVar=t=>'--t'+(Math.max(0,TIERS.indexOf(t))+1);
 
 /* ---------- state ---------- */
 let ALL=[], loaded=false, canAdmin=false;
 const charts={};
 const filt={ex:blankF(),sr:blankF(),un:{country:'',system:'any',q:''}};
-function blankF(){return {region:'',country:'',field:'',university:'',tier:'',level:'',system:'any',max:100,sector:'',all3:'',q:''};}
+function blankF(){return {region:'',country:'',field:'',university:'',tier:'',level:'',system:'any',max:100,sector:'',all3:'',cv:'',q:''};}
 let drillField=null;
 
 function enrich(id,d){
@@ -590,7 +601,7 @@ function enrich(id,d){
   const o={id,name:val(d.name),university:val(d.university),country:val(d.country),specialization:val(d.specialization),
     level:LEVELS.includes(lvl)?lvl:'',sector:val(d.sector),field:FIELDS.includes(fld)?fld:'',qs:r[0],the:r[1],arwu:r[2],
     position:d.position||'',department:d.department||'',gradUniversity:d.gradUniversity||'',gradYear:d.gradYear||null,
-    linkedin:d.linkedin||'',createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
+    linkedin:d.linkedin||'',cv:d.cv||'',createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
   o.region=REGION_OF[o.country]||'';
   o._t=norm([o.name,o.university,o.country,o.specialization,o.sector,o.department,o.position,o.gradUniversity,o.field].join(' '));
   return o;
@@ -606,6 +617,8 @@ function match(c,f){
   if(f.level&&c.level!==f.level)return false;
   if(f.sector&&c.sector!==f.sector)return false;
   if(f.all3&&c.nr!==3)return false;
+  if(f.cv==='1'&&!c.cv)return false;
+  if(f.cv==='0'&&c.cv)return false;
   const m=Number(f.max)||100;
   if(f.system==='any'){ if(m<100&&!(c.best!=null&&c.best<=m))return false; }
   else { const v=c[f.system]; if(v==null||v>m)return false; }
@@ -638,6 +651,7 @@ function buildFilters(host,f,p,onChange){
   h+=`<div class="fld"><label for="${p}-tier">فئة الترتيب</label><select id="${p}-tier" data-k="tier">${opt('','كل الفئات',f.tier)}${TIERS.map(c=>opt(c,c,f.tier)).join('')}</select></div>`;
   h+=`<div class="fld"><label for="${p}-level">المؤهل</label><select id="${p}-level" data-k="level">${opt('','كل المؤهلات',f.level)}${LEVELS.map(c=>opt(c,c,f.level)).join('')}</select></div>`;
   h+=`<div class="fld"><label for="${p}-all3">التغطية</label><select id="${p}-all3" data-k="all3">${opt('','كل الجامعات',f.all3)}${opt('1','مصنفة في التصنيفات الثلاثة',f.all3)}</select></div>`;
+  if(p==='sr') h+=`<div class="fld"><label for="${p}-cv">السيرة الذاتية</label><select id="${p}-cv" data-k="cv">${opt('','الكل',f.cv)}${opt('1','متوفرة',f.cv)}${opt('0','غير متوفرة',f.cv)}</select></div>`;
   h+=`<div class="fld"><label for="${p}-system">التصنيف</label><select id="${p}-system" data-k="system">${SYSTEMS.map(([v,l])=>opt(v,l,f.system)).join('')}</select></div>`;
   h+=`<div class="fld"><label for="${p}-max">حتى المرتبة <span class="rv" id="${p}-maxv">${f.max}</span></label><input type="range" id="${p}-max" data-k="max" min="5" max="100" step="5" value="${f.max}"></div>`;
   host.innerHTML=h;
@@ -925,13 +939,14 @@ function srRows(){
 function renderSearch(rebuild=true){
   if(rebuild) buildFilters($('#srFilters'),filt.sr,'sr',(r)=>{srPage=0;renderSearch(r);});
   if($('#srQ').value!==filt.sr.q) $('#srQ').value=filt.sr.q;
-  $('#srHead').innerHTML=SR_COLS.map(([k,l])=>`<th class="sort" data-k="${k}"${['qs','the','arwu','best'].includes(k)?' style="text-align:center"':''}>${l}<span class="ar">${srSort.k===k?(srSort.dir>0?'▲':'▼'):'↕'}</span></th>`).join('');
-  $('#srHead').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k; srSort=srSort.k===k?{k,dir:-srSort.dir}:{k,dir:1}; renderSearch(false);});
+  $('#srHead').innerHTML=SR_COLS.map(([k,l])=>`<th class="sort" data-k="${k}"${['qs','the','arwu','best'].includes(k)?' style="text-align:center"':''}>${l}<span class="ar">${srSort.k===k?(srSort.dir>0?'▲':'▼'):'↕'}</span></th>`).join('').replace('</th>','</th><th style="text-align:center">السيرة الذاتية</th>');
+  $('#srHead').querySelectorAll('th.sort').forEach(th=>th.onclick=()=>{const k=th.dataset.k; srSort=srSort.k===k?{k,dir:-srSort.dir}:{k,dir:1}; renderSearch(false);});
   const m=srRows(); const pages=Math.max(1,Math.ceil(m.length/SR_PS)); srPage=Math.min(srPage,pages-1);
   const slice=m.slice(srPage*SR_PS,srPage*SR_PS+SR_PS);
   $('#srCount').innerHTML=`<b>${fmt(m.length)}</b> مرشحاً مطابقاً <span class="note">من أصل ${fmt(ALL.length)}</span>`;
-  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)||'<span class="rk-none">—</span>'}</td><td>${c.level?`<span class="lvl">${esc(c.level)}</span>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
-    :`<tr><td colspan="10"><div class="empty"><b>لا يوجد مرشحون مطابقون</b>جرّب كلمة أخرى أو خفّف أحد الشروط.</div></td></tr>`;
+  $('#srBody').innerHTML=slice.length?slice.map(c=>`<tr class="clk" data-id="${esc(c.id)}" tabindex="0"><td><b>${esc(c.name)}</b>${c.position?`<div class="note">${esc(c.position)}</div>`:''}</td><td class="rk">${c.cv?`<a class="cv-ic" href="${esc(cvHref(c.cv))}" target="_blank" rel="noopener" aria-label="تحميل السيرة الذاتية لـ ${esc(c.name)}">${CV_ICON} تحميل</a>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.university)}</td><td>${esc(c.country)}</td><td class="wrap-t">${esc(c.specialization)||'<span class="rk-none">—</span>'}</td><td>${c.level?`<span class="lvl">${esc(c.level)}</span>`:'<span class="rk-none">—</span>'}</td><td>${esc(c.field)||'<span class="rk-none">—</span>'}</td>${rkCells(c)}<td class="rk"><b>${c.best??'—'}</b></td></tr>`).join('')
+    :`<tr><td colspan="11"><div class="empty"><b>لا يوجد مرشحون مطابقون</b>جرّب كلمة أخرى أو خفّف أحد الشروط.</div></td></tr>`;
+  $('#srBody').querySelectorAll('a.cv-ic').forEach(a=>{a.onclick=e=>e.stopPropagation();a.onkeydown=e=>e.stopPropagation();});
   $('#srBody').querySelectorAll('tr[data-id]').forEach(tr=>{const open=()=>openCandidate(tr.dataset.id);tr.onclick=open;tr.onkeydown=e=>{if(e.key==='Enter')open();};});
   $('#srPageInfo').textContent=m.length?`عرض ${srPage*SR_PS+1}–${Math.min(m.length,(srPage+1)*SR_PS)} من ${fmt(m.length)} · صفحة ${srPage+1} من ${pages}`:'';
   $('#srPrev').disabled=srPage<=0; $('#srNext').disabled=srPage>=pages-1;
@@ -943,23 +958,44 @@ $('#srReset').onclick=()=>{filt.sr=blankF();srPage=0;renderSearch();};
 $('#exReset').onclick=()=>{filt.ex=blankF();renderExplore();};
 $('#exToSearch').onclick=()=>{filt.sr=Object.assign(blankF(),filt.ex);srPage=0;show('search');};
 $('#srExport').onclick=async()=>{
-  const m=srRows(); const head=['الاسم','الجامعة','الدولة','التخصص','المؤهل','القطاع','المجال','QS 2026','THE 2026','ARWU 2026','أفضل ترتيب','فئة الترتيب','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
-  const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
-  const lines=[head.join(',')].concat(m.map(c=>[c.name,c.university,c.country,c.specialization,c.level,c.sector,c.field,c.qs,c.the,c.arwu,c.best,c.tier,c.position,c.gradUniversity,c.gradYear,c.linkedin].map(q).join(',')));
-  await saveFile(`candidates-${m.length}.csv`,'﻿'+lines.join('\r\n'),'text/csv;charset=utf-8');
+  const m=srRows(); if(!m.length){ toast('لا توجد نتائج للتصدير'); return; }
+  const head=['الاسم','الجامعة','الدولة','التخصص','المؤهل','القطاع','المجال','QS 2026','THE 2026','ARWU 2026','أفضل ترتيب','فئة الترتيب','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn','السيرة الذاتية'];
+  const LI=15, CV=16;
+  const rowOf=c=>[c.name,c.university,c.country,c.specialization,c.level,c.sector,c.field,c.qs,c.the,c.arwu,c.best,c.tier,c.position,c.gradUniversity,c.gradYear,liHref(c.linkedin),cvHref(c.cv)];
+  if(typeof XLSX==='undefined'){
+    const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
+    const lines=[head.join(',')].concat(m.map(c=>rowOf(c).map(q).join(',')));
+    await saveFile(`candidates-${m.length}.csv`,'\ufeff'+lines.join('\r\n'),'text/csv;charset=utf-8'); return;
+  }
+  const ws=XLSX.utils.aoa_to_sheet([head].concat(m.map(c=>{const r=rowOf(c); r[LI]=r[LI]?'فتح LinkedIn':''; r[CV]=r[CV]?'تحميل السيرة الذاتية':''; return r;})));
+  m.forEach((c,i)=>{
+    const li=liHref(c.linkedin), cv=cvHref(c.cv);
+    if(li){ const a=XLSX.utils.encode_cell({r:i+1,c:LI}); ws[a].l={Target:li,Tooltip:li}; }
+    if(cv){ const a=XLSX.utils.encode_cell({r:i+1,c:CV}); ws[a].l={Target:cv,Tooltip:cv}; }
+  });
+  ws['!cols']=[30,34,16,30,14,24,26,9,9,10,10,12,24,30,10,16,20].map(w=>({wch:w}));
+  ws['!autofilter']={ref:ws['!ref']};
+  const wb=XLSX.utils.book_new(); wb.Workbook={Views:[{RTL:true}]};
+  XLSX.utils.book_append_sheet(wb,ws,'المرشحون');
+  const withCv=m.filter(c=>c.cv).length;
+  const info=XLSX.utils.aoa_to_sheet([['تصدير نتائج البحث'],['عدد المرشحين',m.length],['لديهم سيرة ذاتية',withCv],['لديهم رابط LinkedIn',m.filter(c=>c.linkedin).length],['تاريخ التصدير',new Date().toLocaleDateString('ar-SA-u-ca-gregory')],[''],['اضغط على «تحميل السيرة الذاتية» أو «فتح LinkedIn» في ورقة المرشحين لفتح الرابط.']]);
+  info['!cols']=[{wch:24},{wch:40}];
+  XLSX.utils.book_append_sheet(wb,info,'ملخص');
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  await saveFile(`candidates-${m.length}.xlsx`,out,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 };
 
 /* ---------- candidate dialog ---------- */
 function openCandidate(id){
   const c=ALL.find(x=>x.id===id); if(!c)return;
-  const li=c.linkedin?(/^https?:\/\//.test(c.linkedin)?c.linkedin:'https://'+c.linkedin):'';
+  const li=liHref(c.linkedin), cv=cvHref(c.cv);
   const row=(k,v)=>v?`<dt>${k}</dt><dd>${v}</dd>`:'';
   const host=$('#dlgHost');
   host.innerHTML=`<div class="scrim" id="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
     <header><div style="flex:1;min-width:0"><h3 id="dlgT">${esc(c.name)}</h3><div class="note">${esc(c.position||c.specialization||'')}</div></div><button class="btn sm" id="dlgX" aria-label="إغلاق">إغلاق</button></header>
     <div class="body">
       <div class="ranks3"><div style="--c:var(--s1)"><small>QS 2026</small><b>${c.qs??'—'}</b></div><div style="--c:var(--s2)"><small>THE 2026</small><b>${c.the??'—'}</b></div><div style="--c:var(--s3)"><small>ARWU 2026</small><b>${c.arwu??'—'}</b></div></div>
-      <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:`<a class="btn sm li-btn" href="${esc(liSearch(c.name,c.university))}" target="_blank" rel="noopener">${LI_ICON} البحث في LinkedIn</a><div class="note" style="margin-top:4px">يفتح البحث باسم المرشح وجامعته في حسابك. بعد التأكد من الشخص الصحيح انسخ رابطه وألصقه من «تعديل البيانات».</div>`)}</dl>
+      <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:`<a class="btn sm li-btn" href="${esc(liSearch(c.name,c.university))}" target="_blank" rel="noopener">${LI_ICON} البحث في LinkedIn</a><div class="note" style="margin-top:4px">يفتح البحث باسم المرشح وجامعته في حسابك. بعد التأكد من الشخص الصحيح انسخ رابطه وألصقه من «تعديل البيانات».</div>`)}${row('السيرة الذاتية',cv?`<a class="btn sm cv-btn" href="${esc(cv)}" target="_blank" rel="noopener" download>${CV_ICON} تحميل السيرة الذاتية</a>`:'<span class="note">غير متوفرة بعد</span>')}</dl>
       ${canAdmin?`<div class="row" style="margin-top:16px"><button class="btn" id="dlgEdit">تعديل البيانات</button></div>`:''}
     </div></div></div>`;
   const close=()=>{host.innerHTML='';document.removeEventListener('keydown',onKey);};
@@ -1037,7 +1073,7 @@ function formData(){
   const num=id=>{const v=g(id);return v===''?null:Number(v);};
   return {name:g('name'),university:g('university'),country:g('country'),qs:num('qs'),the:num('the'),arwu:num('arwu'),field:g('field'),
     sector:g('sector'),specialization:g('specialization'),level:g('level'),position:g('position'),
-    gradUniversity:g('gradUniversity'),gradYear:num('gradYear'),linkedin:g('linkedin')};
+    gradUniversity:g('gradUniversity'),gradYear:num('gradYear'),linkedin:g('linkedin'),cv:g('cv')};
 }
 function validate(d){
   if(!d.name)return 'أدخل اسم المرشح.';
@@ -1053,7 +1089,7 @@ function validate(d){
 function resetForm(){ $('#fm').reset(); $('#f-level').value='دكتوراه'; editId=null; $('#fmTitle').textContent='إضافة مرشح جديد'; $('#fmSubmit').textContent='حفظ المرشح'; $('#fmCancel').hidden=true; $('#fmErr').textContent=''; delete $('#fm').dataset.dupOk; }
 function startEdit(id){
   const c=ALL.find(x=>x.id===id); if(!c)return; editId=id; fillFormOptions();
-  for(const k of ['name','university','country','qs','the','arwu','sector','specialization','position','gradUniversity','gradYear','linkedin']) $('#f-'+k).value=c[k]??'';
+  for(const k of ['name','university','country','qs','the','arwu','sector','specialization','position','gradUniversity','gradYear','linkedin','cv']) $('#f-'+k).value=c[k]??'';
   $('#f-field').value=c.field||''; $('#f-level').value=c.level||'';
   $('#fmTitle').textContent='تعديل بيانات: '+c.name; $('#fmSubmit').textContent='حفظ التعديلات'; $('#fmCancel').hidden=false; $('#fmErr').textContent='';
   $('#f-name').focus(); $('#fm').scrollIntoView({behavior:REDUCED?'auto':'smooth',block:'center'});
@@ -1079,7 +1115,7 @@ $('#fm').addEventListener('submit',async e=>{
 $('#fm').addEventListener('input',()=>{delete $('#fm').dataset.dupOk;});
 
 /* ---------- admin: Excel import ---------- */
-const XL_HEAD=['الاسم','الجامعة','الدولة','QS 2026','THE 2026','ARWU 2026','المجال الرئيسي','القطاع / القسم','التخصص / الدرجة','المؤهل','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
+const XL_HEAD=['الاسم','الجامعة','الدولة','QS 2026','THE 2026','ARWU 2026','المجال الرئيسي','القطاع / القسم','التخصص / الدرجة','المؤهل','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn','السيرة الذاتية'];
 const XL_MAP={
   name:['الاسم','اسم المرشح','name','candidate name','full name','candidate'],
   university:['الجامعة','الجامعة المصنفة','university college','candidate university','university'],
@@ -1094,7 +1130,8 @@ const XL_MAP={
   position:['المسمى الوظيفي','position','job title','title'],
   gradUniversity:['جامعة التخرج','graduation university','grad university'],
   gradYear:['سنة التخرج','edu completion year','graduation year','completion year','year'],
-  linkedin:['linkedin','linkedin profile','رابط linkedin']
+  linkedin:['linkedin','linkedin profile','رابط linkedin'],
+  cv:['السيرة الذاتية','رابط السيرة الذاتية','السيرة','cv','resume','cv link','resume link']
 };
 const HEAD_LOOKUP=(()=>{const m=new Map(); for(const [k,arr] of Object.entries(XL_MAP)) arr.forEach(h=>m.set(norm(h),k)); return m;})();
 const LEVEL_EN={phd:'دكتوراه',doctorate:'دكتوراه','post doc':'ما بعد الدكتوراه',postdoc:'ما بعد الدكتوراه',master:'ماجستير',masters:'ماجستير',msc:'ماجستير',bachelor:'بكالوريوس',bsc:'بكالوريوس'};
@@ -1121,9 +1158,10 @@ async function saveTemplate(){
     ['• إذا كانت الجامعة موجودة في البوابة يكفي كتابة اسمها كما يظهر فيها، فتُكمل الدولة والترتيب تلقائياً.'],
     ['• المجال الرئيسي أحد القيم: '+FIELDS.join('، ')],
     ['• المؤهل أحد القيم: '+LEVELS.join('، ')],
-    ['• المرشح المكرر (نفس الاسم والجامعة) يُستبعد تلقائياً.'],[''],
+    ['• المرشح المكرر (نفس الاسم والجامعة) يُستبعد تلقائياً.'],
+    ['• لتحديث روابط LinkedIn أو السيرة الذاتية لمرشحين موجودين: صدّرهم من صفحة البحث، ضع الروابط في عمودي LinkedIn والسيرة الذاتية، ثم ارفع الملف هنا.'],[''],
     ['مثال (لا تنسخه إلى ورقة المرشحين):'],XL_HEAD,
-    ['Dr. Sara Ahmed','University of Toronto','Canada',29,21,24,'الصحة والطب','Pharmacy','PhD in Pharmaceutical Sciences','دكتوراه','Assistant Professor','University of Toronto',2019,'linkedin.com/in/example']];
+    ['Dr. Sara Ahmed','University of Toronto','Canada',29,21,24,'الصحة والطب','Pharmacy','PhD in Pharmaceutical Sciences','دكتوراه','Assistant Professor','University of Toronto',2019,'linkedin.com/in/example','https://1drv.ms/b/…']];
   const ws2=XLSX.utils.aoa_to_sheet(help); ws2['!cols']=[{wch:30}].concat(XL_HEAD.slice(1).map(()=>({wch:18})));
   XLSX.utils.book_append_sheet(wb,ws2,'تعليمات');
   const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
@@ -1146,14 +1184,14 @@ async function readExcel(file){
   }
   if(!grid){ toast('لم أجد أعمدة معروفة. استخدم القالب أو تأكد من وجود عمودي الاسم والجامعة.'); return; }
   const sectorField=new Map(); countBy(ALL,'sector').forEach(([s])=>{ const f=countBy(ALL.filter(x=>x.sector===s),'field')[0]?.[0]; if(f) sectorField.set(norm(s),f); });
-  const seen=new Set(ALL.map(x=>norm(x.name)+'|'+norm(x.university)));
+  const exist=new Map(ALL.map(x=>[norm(x.name)+'|'+norm(x.university),x])), seen=new Set();
   xlRows=[];
   for(let r=hdr+1;r<grid.length;r++){
     const row=grid[r]; const g=k=>map[k]!=null?String(row[map[k]]??'').trim():'';
     if(!row.some(v=>String(v).trim()))continue;
     const d={name:g('name'),university:g('university'),country:g('country'),qs:rankOf(g('qs')),the:rankOf(g('the')),arwu:rankOf(g('arwu')),
       field:g('field'),sector:g('sector'),specialization:g('specialization'),level:g('level'),position:g('position'),
-      gradUniversity:g('gradUniversity'),gradYear:yearOf(g('gradYear')),linkedin:g('linkedin')};
+      gradUniversity:g('gradUniversity'),gradYear:yearOf(g('gradYear')),linkedin:g('linkedin'),cv:g('cv')};
     const notes=[];
     const ku=d.university?knownUni(d.university):null;
     if(ku){ d.university=ku.name; if(!d.country){d.country=ku.country;notes.push('أُكملت الدولة');} if(d.qs==null&&d.the==null&&d.arwu==null){d.qs=ku.qs;d.the=ku.the;d.arwu=ku.arwu;notes.push('أُكمل الترتيب');} }
@@ -1161,23 +1199,32 @@ async function readExcel(file){
     if(!FIELDS.includes(d.field)){ const f2=sectorField.get(norm(d.sector))||''; if(!f2)notes.push('بدون مجال'); d.field=f2; }
     d.level=inferLevel(val(d.level),d.specialization);
     if(d.linkedin&&!/^https?:\/\//.test(d.linkedin)&&/linkedin\.com/i.test(d.linkedin)) d.linkedin='https://'+d.linkedin;
-    let st='ok', why='';
-    if(!d.name){st='bad';why='الاسم مفقود';}
+    if(d.cv&&!/^https?:\/\//i.test(d.cv)&&/(1drv\.ms|sharepoint\.com|onedrive|live\.com|^www\.)/i.test(d.cv)) d.cv='https://'+d.cv;
+    if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.cv))d.cv='';
+    if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.linkedin))d.linkedin='';
+    let st='ok', why='', upd=null;
+    const ex=d.name&&d.university?exist.get(norm(d.name)+'|'+norm(d.university)):null;
+    if(ex){
+      const ch={}; if(d.cv&&d.cv!==ex.cv)ch.cv=d.cv; if(d.linkedin&&d.linkedin!==ex.linkedin)ch.linkedin=d.linkedin;
+      if(Object.keys(ch).length){ st='upd'; upd={id:ex.id,ch}; why='سيُحدَّث: '+[ch.linkedin?'LinkedIn':'',ch.cv?'السيرة الذاتية':''].filter(Boolean).join(' و'); }
+      else { st='dup'; why='موجود مسبقاً'; }
+    }
+    else if(!d.name){st='bad';why='الاسم مفقود';}
     else if(!d.university){st='bad';why='الجامعة مفقودة';}
     else if(!d.country){st='bad';why='الدولة مفقودة (جامعة جديدة)';}
     else if(d.qs==null&&d.the==null&&d.arwu==null){st='bad';why='لا يوجد ترتيب من 1 إلى 100';}
-    else { const key=norm(d.name)+'|'+norm(d.university); if(seen.has(key)){st='dup';why='موجود مسبقاً';} else seen.add(key); }
-    xlRows.push({d,st,why:why||notes.join('، ')});
+    else { const key=norm(d.name)+'|'+norm(d.university); if(seen.has(key)){st='dup';why='مكرر في الملف';} else seen.add(key); }
+    xlRows.push({d,st,upd,why:why||notes.join('، ')});
   }
   renderXl();
 }
 function renderXl(){
-  const ok=xlRows.filter(r=>r.st==='ok').length, dup=xlRows.filter(r=>r.st==='dup').length, bad=xlRows.filter(r=>r.st==='bad').length;
+  const ok=xlRows.filter(r=>r.st==='ok').length, up=xlRows.filter(r=>r.st==='upd').length, dup=xlRows.filter(r=>r.st==='dup').length, bad=xlRows.filter(r=>r.st==='bad').length;
   $('#xlResult').hidden=false;
-  $('#xlSummary').innerHTML=`<span class="st ok">✓ جاهز للإضافة: ${ok}</span><span class="st dup">⟳ مكرر وسيُستبعد: ${dup}</span><span class="st bad">✕ يحتاج تصحيحاً: ${bad}</span>`;
-  const lab={ok:'<span class="st ok">✓ جاهز</span>',dup:'<span class="st dup">⟳ مكرر</span>',bad:'<span class="st bad">✕ خطأ</span>'};
+  $('#xlSummary').innerHTML=`<span class="st ok">✓ جاهز للإضافة: ${ok}</span>${up?`<span class="st upd">↻ تحديث روابط: ${up}</span>`:''}<span class="st dup">⟳ مكرر وسيُستبعد: ${dup}</span><span class="st bad">✕ يحتاج تصحيحاً: ${bad}</span>`;
+  const lab={ok:'<span class="st ok">✓ جاهز</span>',upd:'<span class="st upd">↻ تحديث</span>',dup:'<span class="st dup">⟳ مكرر</span>',bad:'<span class="st bad">✕ خطأ</span>'};
   $('#xlBody').innerHTML=xlRows.slice(0,500).map(r=>`<tr><td>${lab[r.st]}</td><td>${esc(r.d.name)}</td><td>${esc(r.d.university)}</td><td>${esc(r.d.country)}</td><td class="rk">${r.d.qs??'—'}</td><td class="rk">${r.d.the??'—'}</td><td class="rk">${r.d.arwu??'—'}</td><td>${esc(r.d.field)||'<span class="rk-none">—</span>'}</td><td class="note">${esc(r.why)}</td></tr>`).join('');
-  $('#xlImport').disabled=!ok; $('#xlImport').textContent=ok?`إضافة ${ok} مرشح`:'لا يوجد ما يُضاف';
+  $('#xlImport').disabled=!(ok||up); $('#xlImport').textContent=ok&&up?`إضافة ${ok} وتحديث ${up}`:ok?`إضافة ${ok} مرشح`:up?`تحديث روابط ${up} مرشح`:'لا يوجد ما يُضاف';
   $('#xlProgress').textContent=bad?'صحّح الأسطر التي بها أخطاء في الملف وأعد رفعه، أو أضف الجاهز الآن.':'';
 }
 $('#xlFile').addEventListener('change',e=>{const f=e.target.files[0]; if(f)readExcel(f); e.target.value='';});
@@ -1187,11 +1234,12 @@ const dropEl=$('#xlDrop');
 dropEl.addEventListener('drop',e=>{const f=e.dataTransfer.files[0]; if(f)readExcel(f);});
 $('#xlClear').onclick=()=>{xlRows=[];$('#xlResult').hidden=true;};
 $('#xlImport').onclick=async()=>{
-  if(!canAdmin)return; const list=xlRows.filter(r=>r.st==='ok'); if(!list.length)return;
+  if(!canAdmin)return; const list=xlRows.filter(r=>r.st==='ok'), ups=xlRows.filter(r=>r.st==='upd'); if(!list.length&&!ups.length)return;
   const b=$('#xlImport'); b.disabled=true; const t0=Date.now();
   try{
-    await store.saveMany(list.map((r,i)=>({id:newId()+i,data:{...r.d,createdAt:t0+i}})),(k,n)=>{$('#xlProgress').textContent=`جارٍ الإضافة… ${k} من ${n}`;});
-    toast(`تمت إضافة ${list.length} مرشح`); xlRows=[]; $('#xlResult').hidden=true; $('#xlProgress').textContent='';
+    if(list.length) await store.saveMany(list.map((r,i)=>({id:newId()+i,data:{...r.d,createdAt:t0+i}})),(k,n)=>{$('#xlProgress').textContent=`جارٍ الإضافة… ${k} من ${n}`;});
+    if(ups.length) await store.updateMany(ups.map(r=>{const c=ALL.find(x=>x.id===r.upd.id); return {id:r.upd.id,data:{...(c?c.raw:{}),...r.upd.ch,updatedAt:t0}};}),(k,n)=>{$('#xlProgress').textContent=`جارٍ التحديث… ${k} من ${n}`;});
+    toast([list.length?`تمت إضافة ${list.length} مرشح`:'',ups.length?`تم تحديث روابط ${ups.length} مرشح`:''].filter(Boolean).join(' و')); xlRows=[]; $('#xlResult').hidden=true; $('#xlProgress').textContent='';
   }catch(ex){ $('#xlProgress').textContent=saveErr(ex); b.disabled=false; }
 };
 
@@ -1309,6 +1357,18 @@ const store={
     }
     const batch=fdb.batch();
     for(const [sid,obj] of groups) batch.set(fdb.collection('shards').doc(sid),{items:obj},{merge:true});
+    if(progress)progress(0,items.length);
+    await batch.commit();
+    if(progress)progress(items.length,items.length);
+  },
+  async updateMany(items,progress){
+    const groups=new Map();
+    for(const it of items){ const sid=shardOf.get(it.id); if(!sid)continue; if(!groups.has(sid))groups.set(sid,[]); groups.get(sid).push(it); }
+    const batch=fdb.batch();
+    for(const [sid,list] of groups){
+      const args=[]; list.forEach(it=>args.push(new firebase.firestore.FieldPath('items',it.id),clean(it.data)));
+      batch.update(fdb.collection('shards').doc(sid),...args);
+    }
     if(progress)progress(0,items.length);
     await batch.commit();
     if(progress)progress(items.length,items.length);
