@@ -964,6 +964,8 @@ let qT=null; $('#srQ').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeo
 $('#srReset').onclick=()=>{filt.sr=blankF();srPage=0;renderSearch();};
 $('#exReset').onclick=()=>{filt.ex=blankF();renderExplore();};
 $('#exToSearch').onclick=()=>{filt.sr=Object.assign(blankF(),filt.ex);srPage=0;show('search');};
+const LINK_REDIRECT='go.html';
+const xlLink=u=>{ const base=window.__GO_BASE||(LINK_REDIRECT?new URL(LINK_REDIRECT,location.href).href:''); return base&&/linkedin\.com/i.test(u)?base+'?to='+encodeURIComponent(u):u; };
 const EXCELJS_URL='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
 let exjP=null;
 function loadExcelJS(){ if(window.ExcelJS)return Promise.resolve(window.ExcelJS);
@@ -1008,7 +1010,7 @@ async function exportStyled(m){
     const li=liHref(c.linkedin), cv=cvHref(c.cv), em=splitMulti(c.email), ph=splitMulti(c.phone);
     const vals=[i+1,c.name,c.university,c.country,c.qs,c.the,c.arwu,c.best,c.tier,c.field,c.sector,c.specialization,c.level,c.position,
       c.gradUniversity&&c.gradUniversity!==c.university?c.gradUniversity:'',c.gradYear||'',
-      em.length?em.join('\n'):NA, ph.length?ph.join('\n'):NA, li?{text:'LinkedIn',hyperlink:li}:NA, cv?{text:'تحميل السيرة الذاتية',hyperlink:cv}:'غير متوفرة حالياً'];
+      em.length?em.join('\n'):NA, ph.length?ph.join('\n'):NA, li?{text:'LinkedIn',hyperlink:xlLink(li)}:NA, cv?{text:'تحميل السيرة الذاتية',hyperlink:cv}:'غير متوفرة حالياً'];
     const r=ws.addRow(vals); const z=i%2?fill(C.zebra):fill('FFFFFF');
     r.eachCell({includeEmpty:true},(cell,k)=>{
       cell.font={name:BF,size:13,color:{argb:'FF'+C.ink}}; cell.fill=z; cell.border=border;
@@ -1077,7 +1079,7 @@ async function exportPlain(m){
   const ws=XLSX.utils.aoa_to_sheet([head].concat(m.map(c=>{const r=rowOf(c); r[LI]=r[LI]?'فتح LinkedIn':''; r[CV]=r[CV]?'تحميل السيرة الذاتية':'غير متوفرة حالياً'; if(!r[EM])r[EM]='غير متوفر حالياً'; if(!r[PH])r[PH]='غير متوفر حالياً'; return r;})));
   m.forEach((c,i)=>{
     const li=liHref(c.linkedin), cv=cvHref(c.cv);
-    if(li){ const a=XLSX.utils.encode_cell({r:i+1,c:LI}); ws[a].l={Target:li,Tooltip:li}; }
+    if(li){ const a=XLSX.utils.encode_cell({r:i+1,c:LI}); ws[a].l={Target:xlLink(li),Tooltip:li}; }
     if(cv){ const a=XLSX.utils.encode_cell({r:i+1,c:CV}); ws[a].l={Target:cv,Tooltip:cv}; }
     if(c.email){ const a=XLSX.utils.encode_cell({r:i+1,c:EM}); ws[a].l={Target:'mailto:'+splitMulti(c.email).join(',')}; }
     if(c.phone){ const a=XLSX.utils.encode_cell({r:i+1,c:PH}); ws[a].t='s'; ws[a].v=String(c.phone); }
@@ -1287,7 +1289,7 @@ async function readExcel(file){
     if(norm(sn)==='تعليمات')continue;
     const wsh=wb.Sheets[sn], g=XLSX.utils.sheet_to_json(wsh,{header:1,defval:'',blankrows:true,range:0});
     for(const addr in wsh){ if(addr[0]==='!'||!wsh[addr].l||!wsh[addr].l.Target||!/^(linkedin|فتح linkedin|تحميل السيرة الذاتية|تحميل)$/i.test(String(wsh[addr].v||'').trim()))continue; const rc=XLSX.utils.decode_cell(addr), rr=rc.r-XLSX.utils.decode_range(wsh['!ref']).s.r;
-      if(g[rr]) g[rr][rc.c-XLSX.utils.decode_range(wsh['!ref']).s.c]=String(wsh[addr].l.Target).replace(/^mailto:/i,'').split(',').join('; '); }
+      if(g[rr]) { let tg=String(wsh[addr].l.Target); const mm=tg.match(/go\.html\?to=([^&#]+)/); if(mm){ try{tg=decodeURIComponent(mm[1]);}catch(e){} } g[rr][rc.c-XLSX.utils.decode_range(wsh['!ref']).s.c]=tg.replace(/^mailto:/i,'').split(',').join('; '); } }
     for(let r=0;r<Math.min(10,g.length);r++){
       const mm={}; let hits=0;
       g[r].forEach((h,ci)=>{ let k=HEAD_LOOKUP.get(norm(h)); if(!k)return; if(k==='university'&&mm.university!=null) k='gradUniversity'; if(mm[k]==null){mm[k]=ci;hits++;} });
