@@ -460,7 +460,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 <!-- ===================== ADMIN ===================== -->
 <section class="view" id="v-admin" hidden>
   <main class="wrap">
-    <div class="page-head" id="adHead"><div><h2>لوحة التحكم</h2><p>إضافة مرشحين جدد يدوياً أو من ملف Excel، وتعديل البيانات أو حذفها. متاحة لحسابات المسؤولين فقط.</p></div>
+    <div class="page-head" id="adHead"><div><h2>لوحة التحكم</h2></div>
       <div class="row" id="adTools" hidden><span class="note" id="adWho"></span><button class="btn" id="adBackup">تنزيل نسخة احتياطية</button><button class="btn" id="adOut">تسجيل الخروج</button></div></div>
     <div class="panel" id="adLogin" style="max-width:460px">
       <h3>دخول المسؤول</h3>
@@ -508,11 +508,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
         </div>
 
         <div id="paneExcel" hidden>
-          <div class="steps">
-            <div class="step"><div class="n">الخطوة 1</div><div>نزّل القالب واملأ بيانات المرشحين، سطراً لكل مرشح.</div><button class="btn sm" id="xlTemplate" style="margin-top:8px">تنزيل قالب Excel</button></div>
-            <div class="step"><div class="n">الخطوة 2</div><div>ارفع الملف. نقبل القالب أو أي ملف بأعمدة مشابهة (Name, University, Country, QS…).</div></div>
-            <div class="step"><div class="n">الخطوة 3</div><div>راجع النتيجة: الجامعات المعروفة تُكمَل دولتها وترتيبها تلقائياً، والمكرر يُستبعد.</div></div>
-          </div>
+          <div class="row" style="margin-bottom:12px"><button class="btn sm" id="xlTemplate">تنزيل قالب Excel</button></div>
           <label class="drop" id="xlDrop" for="xlFile"><b>اسحب ملف Excel هنا أو اضغط للاختيار</b><span class="note">‎.xlsx أو ‎.xls أو ‎.csv</span></label>
           <input type="file" id="xlFile" accept=".xlsx,.xls,.csv" hidden>
           <div id="xlResult" hidden style="margin-top:14px">
