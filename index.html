@@ -133,20 +133,22 @@ main{padding-block:22px 56px}
 .grp.on .pcard{transform:translateY(-3px);box-shadow:0 22px 40px -18px var(--gc)}
 .conn{position:relative;height:38px}
 .conn::before{content:"";position:absolute;left:50%;top:0;width:2px;height:19px;margin-left:-1px;background:color-mix(in srgb,var(--gc) 40%,transparent);transition:background .3s}
-.conn::after{content:"";position:absolute;top:18px;left:16.66%;right:16.66%;height:2px;background:color-mix(in srgb,var(--gc) 40%,transparent);transition:background .3s}
+.conn::after{content:"";position:absolute;top:18px;left:calc(50% / var(--n));right:calc(50% / var(--n));height:2px;background:color-mix(in srgb,var(--gc) 40%,transparent);transition:background .3s}
 .grp.on .conn::before{background:var(--gc)}
 .grp.on .conn::after{background:linear-gradient(90deg,var(--gc) 0 40%,color-mix(in srgb,var(--gc) 30%,#fff) 50%,var(--gc) 60% 100%);background-size:250% 100%;animation:flow 1.4s linear infinite}
 @keyframes flow{from{background-position:100% 0}to{background-position:-150% 0}}
-.kids{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.kcard{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 12px 10px;text-align:start;cursor:pointer;
+.kids{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px}
+.ksum{margin-top:10px;text-align:center;font-family:var(--font-display);font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ksum b{color:var(--gc);font-weight:800}
+.kcard{position:relative;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 9px 9px;text-align:start;cursor:pointer;
   transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s,border-color .4s,background .4s;transition-delay:calc(var(--i)*70ms);min-width:0}
 .kcard::before{content:"";position:absolute;left:50%;top:-20px;width:2px;height:19px;margin-left:-1px;background:color-mix(in srgb,var(--gc) 40%,transparent);transition:background .3s}
 .kcard::after{content:"";position:absolute;left:50%;top:-7px;margin-left:-5px;border:5px solid transparent;border-top:6px solid color-mix(in srgb,var(--gc) 55%,transparent);transition:border-color .3s}
 .grp.on .kcard::before{background:var(--gc)}
 .grp.on .kcard::after{border-top-color:var(--gc)}
 .grp.on .kcard{transform:translateY(-6px);border-color:var(--gc);background:var(--gs);box-shadow:0 16px 28px -18px var(--gc)}
-.kcard .kl{font-size:15px;color:var(--ink-2);line-height:1.3;min-height:2.6em;display:block}
-.kcard .kv{font-family:var(--font-display);font-size:26px;font-weight:800;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums;display:block;margin-top:4px}
+.kcard .kl{font-size:15px;color:var(--ink-2);line-height:1.3;min-height:2.6em;display:block;font-weight:700}
+.kcard .kv{font-family:var(--font-display);font-size:24px;font-weight:800;color:var(--ink);line-height:1.1;font-variant-numeric:tabular-nums;display:block;margin-top:4px}
 .kcard .kp{font-size:13px;color:var(--muted);display:block}
 .kbar{display:block;height:6px;border-radius:99px;background:var(--track);margin-top:8px;overflow:hidden}
 .kbar b{display:block;height:100%;width:0;border-radius:99px;background:var(--gc);transition:width 1s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i)*90ms + 150ms)}
@@ -265,6 +267,12 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 .toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));inset-inline-start:max(18px,env(safe-area-inset-left,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:16px;box-shadow:var(--shadow)}
 .err{color:var(--critical);font-size:15px}
 
+.foot{background:linear-gradient(100deg,var(--brand),var(--brand-2));color:var(--brand-ink);margin-top:10px}
+.foot .wrap{padding-block:22px calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}
+.foot-a{font-family:var(--font-display);font-weight:700;font-size:17px}
+.foot-b{font-family:var(--font-body);font-size:17px;opacity:.9}
+.ksu-logo{height:44px;width:auto;display:block}
+.brand-sep{width:1px;height:34px;background:rgba(255,255,255,.35);flex:none}
 @media (max-width:1020px){
   .c-4,.c-5,.c-6,.c-7,.c-8{grid-column:span 12}
   .tree{grid-template-columns:1fr;gap:26px}
@@ -273,6 +281,11 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   .kv{grid-template-columns:1fr}
   .kv dt{margin-top:6px}
   .brand small{display:none}
+  .brand{flex:1 1 100%}
+  .brand>div{min-width:0}
+  .brand b{font-size:16px;white-space:normal;line-height:1.25}
+  .ksu-logo{height:32px}
+  .brand-sep{height:26px}
   .pcard .val{font-size:34px}
   .kids{gap:7px}
   .kcard{padding:10px 8px 8px}
@@ -292,8 +305,8 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <div class="mark" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 20 20"><path d="M2 8 10 3l8 5-8 5z" fill="#ffd166"/><path d="M5 10v4c0 1.4 2.2 2.6 5 2.6s5-1.2 5-2.6v-4l-5 3z" fill="#fff"/></svg></div>
-      <div><b>بوابة مرشحي أفضل 100 جامعة</b><small>QS 2026 · THE 2026 · ARWU</small></div>
+      <img class="ksu-logo" src="ksu-logo.png" alt="جامعة الملك سعود" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='https://identity.ksu.edu.sa/sites/identity.ksu.edu.sa/files/imce_images/ksu_masterlogo_white_rgb.png'}else{this.hidden=true;this.nextElementSibling.hidden=true}"><span class="brand-sep" aria-hidden="true"></span>
+      <div><b>بوابة مرشحي أفضل 100 جامعة</b><small>QS 2026 · THE 2026 · ARWU 2026</small></div>
     </div>
     <nav class="tabs" role="tablist" aria-label="أقسام البوابة">
       <button class="tab" role="tab" data-v="overview" id="t-overview">لوحة المؤشرات</button>
@@ -317,7 +330,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
         <div class="chips">
           <span class="chip"><i style="background:var(--s1)"></i>QS 2026</span>
           <span class="chip"><i style="background:var(--s2)"></i>THE 2026</span>
-          <span class="chip"><i style="background:var(--s3)"></i>ARWU</span>
+          <span class="chip"><i style="background:var(--s3)"></i>ARWU 2026</span>
           <span class="status" id="liveStatus"><i></i><span>جارٍ تحميل البيانات</span></span>
         </div>
         <h1>مرشحون من <em>أفضل 100 جامعة</em> في العالم</h1>
@@ -365,11 +378,11 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
         <div class="pills" id="uniPills" style="margin-top:8px"></div>
       </div>
       <div class="panel c-5">
-        <div class="panel-h"><div><h3>تغطية التصنيفات</h3><p class="sub">نسبة المرشحين الذين تظهر جامعتهم ضمن أفضل 100 في كل تصنيف</p></div></div>
+        <div class="panel-h"><div><h3>تغطية التصنيفات</h3><p class="sub">نسبة المرشحين الذين تظهر جامعتهم ضمن أفضل 100 في كل تصنيف. الجامعة الواحدة قد تظهر في أكثر من تصنيف، لذا لا تُجمع النسب</p></div></div>
         <div class="rings" id="rings">
           <div class="ring" style="--c:var(--s1)"><div class="no">01</div><div class="chart" id="rQS"></div><div class="rl">QS 2026</div></div>
           <div class="ring" style="--c:var(--s2)"><div class="no">02</div><div class="chart" id="rTHE"></div><div class="rl">THE 2026</div></div>
-          <div class="ring" style="--c:var(--s3)"><div class="no">03</div><div class="chart" id="rARWU"></div><div class="rl">ARWU</div></div>
+          <div class="ring" style="--c:var(--s3)"><div class="no">03</div><div class="chart" id="rARWU"></div><div class="rl">ARWU 2026</div></div>
           <div class="ring" style="--c:var(--v6)"><div class="no">04</div><div class="chart" id="rALL"></div><div class="rl">في التصنيفات الثلاثة معاً</div></div>
         </div>
       </div>
@@ -381,7 +394,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 <section class="view" id="v-explore" hidden>
   <main class="wrap">
     <div class="page-head">
-      <div><h2>إحصاءات عامة</h2><p>اختر أي مجموعة من الشروط لتحصل على الأرقام فوراً. مثال: الدولة كندا والمجال الصحة والطب.</p></div>
+      <div><h2>إحصاءات عامة</h2></div>
       <div class="row"><button class="btn" id="exReset">مسح الشروط</button><button class="btn pri" id="exToSearch">عرض أسماء المرشحين</button></div>
     </div>
     <div class="panel"><div class="filters" id="exFilters"></div></div>
@@ -394,7 +407,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
       <div class="panel c-6"><h3>المرشحون المطابقون حسب الجامعة</h3><p class="sub">أكثر 10 جامعات ضمن الشروط المختارة</p><div class="pills" id="exPills2" style="margin-top:12px"></div></div>
       <div class="panel c-12">
         <h3 id="exUniTitle">الجامعات المصنفة</h3><p class="sub" id="exUniSub"></p>
-        <div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>الجامعة</th><th>الدولة</th><th style="text-align:center">QS 2026</th><th style="text-align:center">THE 2026</th><th style="text-align:center">ARWU</th><th>فئة الترتيب</th><th style="text-align:center">المرشحون المطابقون</th><th style="text-align:center">كل مرشحي الجامعة</th></tr></thead><tbody id="exUniBody"></tbody></table></div>
+        <div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>الجامعة</th><th>الدولة</th><th style="text-align:center">QS 2026</th><th style="text-align:center">THE 2026</th><th style="text-align:center">ARWU 2026</th><th>فئة الترتيب</th><th style="text-align:center">المرشحون المطابقون</th><th style="text-align:center">كل مرشحي الجامعة</th></tr></thead><tbody id="exUniBody"></tbody></table></div>
       </div>
     </div>
   </main>
@@ -404,7 +417,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
 <section class="view" id="v-search" hidden>
   <main class="wrap">
     <div class="page-head">
-      <div><h2>البحث المتقدم عن المرشحين</h2><p>ابحث بالاسم أو التخصص أو الجامعة، واجمع أي عدد من الشروط. اضغط على أي مرشح لعرض ملفه كاملاً.</p></div>
+      <div><h2>البحث المتقدم عن المرشحين</h2></div>
       <div class="row"><button class="btn" id="srReset">مسح الكل</button><button class="btn" id="srExport" hidden>تصدير النتائج CSV</button></div>
     </div>
     <div class="panel">
@@ -469,7 +482,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
             <div class="fld"><label for="f-country">الدولة <span class="req">*</span></label><input id="f-country" list="dl-country" required autocomplete="off"></div>
             <div class="fld"><label for="f-qs">ترتيب QS 2026</label><input id="f-qs" type="number" min="1" max="100" inputmode="numeric"></div>
             <div class="fld"><label for="f-the">ترتيب THE 2026</label><input id="f-the" type="number" min="1" max="100" inputmode="numeric"></div>
-            <div class="fld"><label for="f-arwu">ترتيب ARWU</label><input id="f-arwu" type="number" min="1" max="100" inputmode="numeric"></div>
+            <div class="fld"><label for="f-arwu">ترتيب ARWU 2026</label><input id="f-arwu" type="number" min="1" max="100" inputmode="numeric"></div>
             <div class="fld"><label for="f-field">المجال الرئيسي <span class="req">*</span></label><select id="f-field" required></select></div>
             <div class="fld"><label for="f-sector">القطاع / القسم</label><input id="f-sector" list="dl-sector" autocomplete="off"></div>
             <div class="fld"><label for="f-specialization">التخصص / الدرجة</label><input id="f-specialization" placeholder="مثال: PhD in Chemistry"></div>
@@ -507,6 +520,12 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   </main>
 </section>
 
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-a">إعداد وتصميم إدارة التوظيف</div>
+    <div class="foot-b">برنامج استقطاب الأساتذة والباحثين المتميزين</div>
+  </div>
+</footer>
 <div id="dlgHost"></div>
 <div id="toastHost"></div>
 </div>
@@ -528,11 +547,19 @@ document.documentElement.setAttribute('lang','ar');
 const TIERS=['أفضل 10','11 - 25','26 - 50','51 - 100'];
 const FIELDS=['الهندسة','العلوم الطبيعية والرياضيات','علوم الحياة والتقنية الحيوية','التعليم واللغات','الصحة والطب','الزراعة والبيئة','الحاسب وتقنية المعلومات','الأعمال والاقتصاد','العلوم الاجتماعية والإنسانية'];
 const FIELD_VAR=['--v1','--v2','--v3','--v4','--v5','--v6','--v7','--v8','--v9'];
+const REGION_OF={};
+[['أوروبا',['United Kingdom','Germany','Netherlands','Sweden','Switzerland','Denmark','France','Belgium','Austria','Italy','Spain','Ireland','Finland','Norway','Portugal','Poland','Czech Republic','Russia']],
+ ['آسيا',['China','Japan','South Korea','Singapore','Hong Kong','Malaysia','Taiwan','Saudi Arabia','Israel','India','United Arab Emirates','Qatar','Turkey','Pakistan','Iran']],
+ ['أمريكا الشمالية',['United States','Canada','Mexico']],
+ ['أوقيانوسيا',['Australia','New Zealand']],
+ ['أمريكا الجنوبية',['Brazil','Argentina','Chile']],
+ ['أفريقيا',['South Africa','Egypt']]].forEach(([r,cs])=>cs.forEach(c=>REGION_OF[c]=r));
+const REGIONS=['أوروبا','آسيا','أمريكا الشمالية','أوقيانوسيا','أمريكا الجنوبية','أفريقيا'];
 const LEVELS=['دكتوراه','ما بعد الدكتوراه','ماجستير','بكالوريوس'];
 /* Values that mean "unknown" are treated as empty and never shown. */
 const BLANKS=new Set(['غير محدد','اخرى غير محدد','أخرى غير محدد','اخرى','أخرى','other','na','n a','none','unknown']);
 const val=v=>{const t=String(v??'').trim(); return BLANKS.has(norm(t))||!t?'':t;};
-const SYSTEMS=[['any','أي تصنيف (أفضل ترتيب)'],['qs','QS 2026'],['the','THE 2026'],['arwu','ARWU']];
+const SYSTEMS=[['any','أي تصنيف (أفضل ترتيب)'],['qs','QS 2026'],['the','THE 2026'],['arwu','ARWU 2026']];
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $=s=>document.querySelector(s);
 const fmt=n=>Number(n||0).toLocaleString('en-US');
@@ -548,7 +575,7 @@ const tierVar=t=>'--t'+(Math.max(0,TIERS.indexOf(t))+1);
 let ALL=[], loaded=false, canAdmin=false;
 const charts={};
 const filt={ex:blankF(),sr:blankF(),un:{country:'',system:'any',q:''}};
-function blankF(){return {country:'',field:'',university:'',tier:'',level:'',system:'any',max:100,sector:'',all3:'',q:''};}
+function blankF(){return {region:'',country:'',field:'',university:'',tier:'',level:'',system:'any',max:100,sector:'',all3:'',q:''};}
 let drillField=null;
 
 function enrich(id,d){
@@ -561,12 +588,14 @@ function enrich(id,d){
     level:LEVELS.includes(lvl)?lvl:'',sector:val(d.sector),field:FIELDS.includes(fld)?fld:'',qs:r[0],the:r[1],arwu:r[2],
     position:d.position||'',department:d.department||'',gradUniversity:d.gradUniversity||'',gradYear:d.gradYear||null,
     linkedin:d.linkedin||'',createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
+  o.region=REGION_OF[o.country]||'';
   o._t=norm([o.name,o.university,o.country,o.specialization,o.sector,o.department,o.position,o.gradUniversity,o.field].join(' '));
   return o;
 }
 
 /* ---------- filtering ---------- */
 function match(c,f){
+  if(f.region&&c.region!==f.region)return false;
   if(f.country&&c.country!==f.country)return false;
   if(f.field&&c.field!==f.field)return false;
   if(f.university&&c.university!==f.university)return false;
@@ -593,10 +622,12 @@ function uniTable(arr){
 /* ---------- filter UI ---------- */
 function opt(v,l,sel){return `<option value="${esc(v)}"${String(v)===String(sel)?' selected':''}>${esc(l)}</option>`;}
 function buildFilters(host,f,p,onChange){
-  const countries=uniq(ALL,'country');
+  const countries=uniq(f.region?ALL.filter(c=>c.region===f.region):ALL,'country');
+  const regions=REGIONS.filter(r=>ALL.some(c=>c.region===r));
   const unis=uniq(f.country?ALL.filter(c=>c.country===f.country):ALL,'university');
   const sectors=uniq(f.field?ALL.filter(c=>c.field===f.field):ALL,'sector');
   let h='';
+  h+=`<div class="fld"><label for="${p}-region">المنطقة</label><select id="${p}-region" data-k="region">${opt('','كل المناطق',f.region)}${regions.map(c=>opt(c,c,f.region)).join('')}</select></div>`;
   h+=`<div class="fld"><label for="${p}-country">الدولة</label><select id="${p}-country" data-k="country">${opt('','كل الدول',f.country)}${countries.map(c=>opt(c,c,f.country)).join('')}</select></div>`;
   h+=`<div class="fld"><label for="${p}-field">المجال الرئيسي</label><select id="${p}-field" data-k="field">${opt('','كل المجالات',f.field)}${FIELDS.map(c=>opt(c,c,f.field)).join('')}</select></div>`;
   if(p==='sr') h+=`<div class="fld"><label for="${p}-sector">القطاع / التخصص</label><select id="${p}-sector" data-k="sector">${opt('','كل القطاعات',f.sector)}${sectors.map(c=>opt(c,c,f.sector)).join('')}</select></div>`;
@@ -614,6 +645,7 @@ function buildFilters(host,f,p,onChange){
       if(k==='max'){ $('#'+p+'-maxv').textContent=el.value; onChange(false); return; }
       if(k==='country'&&f.university){ if(!ALL.some(c=>c.university===f.university&&(!f.country||c.country===f.country))) f.university=''; }
       if(k==='field')f.sector='';
+      if(k==='region'&&f.country&&REGION_OF[f.country]!==f.region){f.country='';f.university='';}
       onChange(true);
     });
   });
@@ -667,28 +699,27 @@ const ICONS={
 let treeIntroDone=false, pinnedG=null;
 function renderTree(){
   const n=ALL.length, unis=uniTable(ALL), nU=unis.length, cs=countBy(ALL,'country');
-  const t10=ALL.filter(c=>c.best!=null&&c.best<=10).length, t50=ALL.filter(c=>c.best!=null&&c.best<=50).length, a3=ALL.filter(c=>c.nr===3).length;
+  const regs=REGIONS.map(r=>[r,cs.filter(([c])=>REGION_OF[c]===r).length,ALL.filter(x=>x.region===r).length]).filter(r=>r[1]);
   const G=[
-    {g:'1',icon:'people',title:'إجمالي المرشحين',value:n,hint:'مرّر أو اضغط لعرض التفاصيل',kids:[
-      {l:'خريجو جامعات أفضل 10',v:t10,b:n,p:'من المرشحين',go:()=>goExplore({max:10})},
-      {l:'خريجو جامعات أفضل 50',v:t50,b:n,p:'من المرشحين',go:()=>goExplore({max:50})},
-      {l:'جامعاتهم في التصنيفات الثلاثة',v:a3,b:n,p:'من المرشحين',go:()=>goExplore({all3:'1'})}]},
-    {g:'2',icon:'uni',title:'الجامعات المصنفة',value:nU,hint:'مرّر أو اضغط لعرض التفاصيل',kids:[
-      {l:'ضمن أفضل 100 في QS 2026',v:unis.filter(u=>u.qs!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('qs')},
-      {l:'ضمن أفضل 100 في THE 2026',v:unis.filter(u=>u.the!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('the')},
-      {l:'ضمن أفضل 100 في ARWU',v:unis.filter(u=>u.arwu!=null).length,b:nU,p:'من الجامعات',go:()=>goUnis('arwu')}]},
-    {g:'3',icon:'globe',title:'الدول',value:cs.length,hint:'مرّر أو اضغط لعرض أعلى الدول',kids:cs.slice(0,3).map(([co,v])=>(
-      {l:co,v,b:n,p:'من المرشحين',go:()=>goExplore({country:co})}))}
+    {g:'1',icon:'people',title:'إجمالي المرشحين',value:n,split:'حسب فئة ترتيب الجامعة',kids:TIERS.map(t=>{const v=ALL.filter(x=>x.tier===t).length;
+      return {l:t,v,b:n,p:'من المرشحين',go:()=>goExplore({tier:t})};})},
+    {g:'2',icon:'uni',title:'الجامعات المصنفة',value:nU,split:'حسب عدد التصنيفات التي تظهر فيها',kids:[
+      {l:'في التصنيفات الثلاثة',v:unis.filter(u=>u.nr===3).length,b:nU,p:'من الجامعات',go:()=>goUnis('all3')},
+      {l:'في تصنيفين',v:unis.filter(u=>u.nr===2).length,b:nU,p:'من الجامعات',go:()=>goUnis('nr2')},
+      {l:'في تصنيف واحد',v:unis.filter(u=>u.nr===1).length,b:nU,p:'من الجامعات',go:()=>goUnis('nr1')}]},
+    {g:'3',icon:'globe',title:'الدول',value:cs.length,split:'حسب المنطقة الجغرافية',kids:regs.map(([r,v,m])=>(
+      {l:r,v,b:cs.length,p:`دول · ${fmt(m)} مرشح`,go:()=>goExplore({region:r})}))}
   ];
   const tree=$('#tree');
   const pinnedKey=pinnedG;
   tree.classList.remove('in');
-  tree.innerHTML=G.map(g=>`<div class="grp" data-g="${g.g}" style="--gc:var(--g${g.g});--gs:var(--g${g.g}s)">
+  tree.innerHTML=G.map(g=>`<div class="grp" data-g="${g.g}" style="--gc:var(--g${g.g});--gs:var(--g${g.g}s);--n:${g.kids.length}">
     <button class="pcard" type="button" aria-expanded="false"><span class="ico">${ICONS[g.icon]}</span><span class="lbl">${g.title}</span><span class="val" data-to="${g.value}">${fmt(g.value)}</span>
-      <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>${g.hint}</span></button>
+      <span class="hint"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>${g.split}</span></button>
     <div class="conn" aria-hidden="true"></div>
     <div class="kids">${g.kids.map((k,i)=>`<button class="kcard" type="button" style="--i:${i};--w:${(k.v/(k.b||1)*100).toFixed(1)}%" data-k="${i}">
-      <span class="kl">${esc(k.l)}</span><span class="kv" data-to="${k.v}">${fmt(k.v)}</span><span class="kp">${pct(k.v,k.b)} ${k.p}</span><span class="kbar"><b></b></span></button>`).join('')}</div></div>`).join('');
+      <span class="kl">${esc(k.l)}</span><span class="kv" data-to="${k.v}">${fmt(k.v)}</span><span class="kp">${k.b===n||k.p.startsWith('من')?pct(k.v,k.b)+' ':''}${k.p}</span><span class="kbar"><b></b></span></button>`).join('')}</div>
+    <div class="ksum">${g.kids.map(k=>fmt(k.v)).join(' + ')} = <b>${fmt(g.value)}</b></div></div>`).join('');
   tree.querySelectorAll('.grp').forEach((el,gi)=>{
     const pc=el.querySelector('.pcard');
     el.addEventListener('mouseenter',()=>{ if(!pinnedG) setOn(el); });
@@ -841,9 +872,8 @@ function renderExplore(rebuild=true){
   if(rebuild) buildFilters($('#exFilters'),f,'ex',renderExplore);
   const m=ALL.filter(c=>match(c,f)), n=ALL.length;
   const unisM=new Set(m.map(c=>c.university)).size;
-  const t10=m.filter(c=>c.best!=null&&c.best<=10).length, t50=m.filter(c=>c.best!=null&&c.best<=50).length, a3=m.filter(c=>c.nr===3).length;
-  const avg=m.length?(m.reduce((a,c)=>a+(c.best||0),0)/m.length).toFixed(1):'—';
   const parts=[];
+  if(f.region&&!f.country)parts.push(`في <span class="q">${esc(f.region)}</span>`);
   if(f.country)parts.push(`في <span class="q">${esc(f.country)}</span>`);
   if(f.field)parts.push(`في مجال <span class="q">${esc(f.field)}</span>`);
   if(f.university)parts.push(`من <span class="q">${esc(f.university)}</span>`);
@@ -854,8 +884,8 @@ function renderExplore(rebuild=true){
   $('#exStatement').innerHTML=(parts.length?`المرشحون ${parts.join('، ')}: `:'كل المرشحين في قاعدة البيانات: ')+`<b>${fmt(m.length)}</b> مرشحاً من <b>${fmt(unisM)}</b> ${unisM>=3&&unisM<=10?'جامعات':'جامعة'}`+(m.length?`، يمثلون ${pct(m.length,n)} من الإجمالي.`:'.');
   const mini=(v,l,p,c)=>`<div class="mini" style="--mc:${c?`var(${c})`:'var(--ink)'}"><div class="v">${v}</div><div class="l">${l}</div>${p?`<div class="p">${p}</div>`:''}</div>`;
   $('#exMinis').innerHTML=mini(fmt(m.length),'المرشحون المطابقون',pct(m.length,n)+' من الإجمالي','--g1')+mini(fmt(unisM),'جامعات المرشحين','','--g2')+
-    mini(fmt(new Set(m.map(c=>c.country)).size),'دول','','--g3')+mini(fmt(t10),'خريجو أفضل 10',pct(t10,m.length)+' من المطابقين','--t1')+
-    mini(fmt(t50),'خريجو أفضل 50',pct(t50,m.length)+' من المطابقين','--v1')+mini(fmt(a3),'جامعاتهم في 3 تصنيفات',pct(a3,m.length)+' من المطابقين','--v6')+mini(avg,'متوسط أفضل ترتيب','');
+    mini(fmt(new Set(m.map(c=>c.country)).size),'دول','','--g3')+
+    TIERS.map((t,i)=>{const v=m.filter(c=>c.tier===t).length;return mini(fmt(v),'جامعات '+t,pct(v,m.length)+' من المطابقين','--t'+(i+1));}).join('');
   const byKey=f.field?'sector':'field';
   $('#exByTitle').textContent=f.field?'المرشحون المطابقون حسب القطاع':'المرشحون المطابقون حسب المجال';
   const r1=countBy(m,byKey).slice(0,10), mx1=r1[0]?.[1]||1;
@@ -908,7 +938,7 @@ $('#srReset').onclick=()=>{filt.sr=blankF();srPage=0;renderSearch();};
 $('#exReset').onclick=()=>{filt.ex=blankF();renderExplore();};
 $('#exToSearch').onclick=()=>{filt.sr=Object.assign(blankF(),filt.ex);srPage=0;show('search');};
 $('#srExport').onclick=async()=>{
-  const m=srRows(); const head=['الاسم','الجامعة','الدولة','التخصص','المؤهل','القطاع','المجال','QS 2026','THE 2026','ARWU','أفضل ترتيب','فئة الترتيب','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
+  const m=srRows(); const head=['الاسم','الجامعة','الدولة','التخصص','المؤهل','القطاع','المجال','QS 2026','THE 2026','ARWU 2026','أفضل ترتيب','فئة الترتيب','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
   const q=v=>{const s=String(v??'');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;};
   const lines=[head.join(',')].concat(m.map(c=>[c.name,c.university,c.country,c.specialization,c.level,c.sector,c.field,c.qs,c.the,c.arwu,c.best,c.tier,c.position,c.gradUniversity,c.gradYear,c.linkedin].map(q).join(',')));
   await saveFile(`candidates-${m.length}.csv`,'﻿'+lines.join('\r\n'),'text/csv;charset=utf-8');
@@ -923,7 +953,7 @@ function openCandidate(id){
   host.innerHTML=`<div class="scrim" id="scrim"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgT">
     <header><div style="flex:1;min-width:0"><h3 id="dlgT">${esc(c.name)}</h3><div class="note">${esc(c.position||c.specialization||'')}</div></div><button class="btn sm" id="dlgX" aria-label="إغلاق">إغلاق</button></header>
     <div class="body">
-      <div class="ranks3"><div style="--c:var(--s1)"><small>QS 2026</small><b>${c.qs??'—'}</b></div><div style="--c:var(--s2)"><small>THE 2026</small><b>${c.the??'—'}</b></div><div style="--c:var(--s3)"><small>ARWU</small><b>${c.arwu??'—'}</b></div></div>
+      <div class="ranks3"><div style="--c:var(--s1)"><small>QS 2026</small><b>${c.qs??'—'}</b></div><div style="--c:var(--s2)"><small>THE 2026</small><b>${c.the??'—'}</b></div><div style="--c:var(--s3)"><small>ARWU 2026</small><b>${c.arwu??'—'}</b></div></div>
       <dl class="kv">${row('الجامعة',esc(c.university))}${row('الدولة',esc(c.country))}${row('فئة الترتيب',tierTag(c.tier))}${row('التخصص / الدرجة',esc(c.specialization))}${row('المؤهل',esc(c.level))}${row('القطاع / القسم',esc(c.sector))}${row('المجال الرئيسي',esc(c.field))}${row('المسمى الوظيفي',esc(c.position))}${row('جامعة التخرج',c.gradUniversity&&c.gradUniversity!==c.university?esc(c.gradUniversity):'')}${row('سنة التخرج',c.gradYear?esc(c.gradYear):'')}${row('LinkedIn',li?`<a href="${esc(li)}" target="_blank" rel="noopener" dir="ltr">${esc(c.linkedin.replace(/^https?:\/\//,''))}</a>`:'')}</dl>
       ${canAdmin?`<div class="row" style="margin-top:16px"><button class="btn" id="dlgEdit">تعديل البيانات</button></div>`:''}
     </div></div></div>`;
@@ -943,15 +973,15 @@ function renderUniversities(rebuild=true,skipCharts=false){
     const countries=uniq(ALL,'country');
     $('#unFilters').innerHTML=`<div class="fld"><label for="un-q">بحث باسم الجامعة</label><input id="un-q" type="search" value="${esc(f.q)}"></div>
       <div class="fld"><label for="un-country">الدولة</label><select id="un-country">${opt('','كل الدول',f.country)}${countries.map(c=>opt(c,c,f.country)).join('')}</select></div>
-      <div class="fld"><label for="un-system">مصنفة في</label><select id="un-system">${opt('any','أي تصنيف',f.system)}${opt('qs','QS 2026',f.system)}${opt('the','THE 2026',f.system)}${opt('arwu','ARWU',f.system)}${opt('all3','التصنيفات الثلاثة معاً',f.system)}</select></div>`;
+      <div class="fld"><label for="un-system">مصنفة في</label><select id="un-system">${opt('any','أي تصنيف',f.system)}${opt('qs','QS 2026',f.system)}${opt('the','THE 2026',f.system)}${opt('arwu','ARWU 2026',f.system)}${opt('all3','التصنيفات الثلاثة معاً',f.system)}${opt('nr2','تصنيفين فقط',f.system)}${opt('nr1','تصنيف واحد فقط',f.system)}</select></div>`;
     $('#un-q').oninput=e=>{f.q=e.target.value;renderUniversities(false);};
     $('#un-country').onchange=e=>{f.country=e.target.value;renderUniversities(false);};
     $('#un-system').onchange=e=>{f.system=e.target.value;renderUniversities(false);};
   }
-  let u=uniTable(ALL).filter(x=>(!f.country||x.country===f.country)&&(!f.q||norm(x.name).includes(norm(f.q)))&&(f.system==='any'||(f.system==='all3'?x.nr===3:x[f.system]!=null)));
+  let u=uniTable(ALL).filter(x=>(!f.country||x.country===f.country)&&(!f.q||norm(x.name).includes(norm(f.q)))&&(f.system==='any'||(f.system==='all3'?x.nr===3:f.system==='nr2'?x.nr===2:f.system==='nr1'?x.nr===1:x[f.system]!=null)));
   const k=unSort.k,d=unSort.dir;
   u.sort((a,b)=>{const x=a[k],y=b[k]; if(x==null&&y==null)return 0; if(x==null)return 1; if(y==null)return -1; return (typeof x==='number'?x-y:String(x).localeCompare(String(y)))*d;});
-  const cols=[['name','الجامعة'],['country','الدولة'],['qs','QS 2026'],['the','THE 2026'],['arwu','ARWU'],['best','أفضل ترتيب'],['nr','عدد التصنيفات'],['n','عدد المرشحين']];
+  const cols=[['name','الجامعة'],['country','الدولة'],['qs','QS 2026'],['the','THE 2026'],['arwu','ARWU 2026'],['best','أفضل ترتيب'],['nr','عدد التصنيفات'],['n','عدد المرشحين']];
   $('#unHead').innerHTML=cols.map(([k,l])=>`<th class="sort" data-k="${k}"${k!=='name'&&k!=='country'?' style="text-align:center"':''}>${l}<span class="ar">${unSort.k===k?(unSort.dir>0?'▲':'▼'):'↕'}</span></th>`).join('');
   $('#unHead').querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;unSort=unSort.k===k?{k,dir:-unSort.dir}:{k,dir:(k==='n'||k==='nr')?-1:1};renderUniversities(false);});
   $('#unBody').innerHTML=u.length?u.map(x=>`<tr class="clk" data-u="${esc(x.name)}" data-c="${esc(x.country)}"><td><b>${esc(x.name)}</b></td><td>${esc(x.country)}</td>${rkCells(x)}<td class="rk">${tierTag(x.tier)} <b>${x.best??''}</b></td><td class="rk">${x.nr}</td><td class="rk"><b>${x.n}</b></td></tr>`).join('')
@@ -1043,7 +1073,7 @@ $('#fm').addEventListener('submit',async e=>{
 $('#fm').addEventListener('input',()=>{delete $('#fm').dataset.dupOk;});
 
 /* ---------- admin: Excel import ---------- */
-const XL_HEAD=['الاسم','الجامعة','الدولة','QS 2026','THE 2026','ARWU','المجال الرئيسي','القطاع / القسم','التخصص / الدرجة','المؤهل','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
+const XL_HEAD=['الاسم','الجامعة','الدولة','QS 2026','THE 2026','ARWU 2026','المجال الرئيسي','القطاع / القسم','التخصص / الدرجة','المؤهل','المسمى الوظيفي','جامعة التخرج','سنة التخرج','LinkedIn'];
 const XL_MAP={
   name:['الاسم','اسم المرشح','name','candidate name','full name','candidate'],
   university:['الجامعة','الجامعة المصنفة','university college','candidate university','university'],
