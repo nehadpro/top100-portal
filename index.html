@@ -307,11 +307,40 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   .rings .chart{height:130px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}.pills .fill{width:var(--w)}.pills .tag{opacity:1}}
+.gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;overflow:auto;background:radial-gradient(1200px 600px at 85% -10%,color-mix(in srgb,var(--brand) 22%,transparent),transparent 60%),radial-gradient(900px 500px at 0% 110%,color-mix(in srgb,var(--s3) 16%,transparent),transparent 60%),var(--bg)}
+html.gated body{overflow:hidden}
+html.gated #app{visibility:hidden}
+.gate-card{width:min(440px,100%);background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px -30px rgba(0,30,70,.45);overflow:hidden}
+.gate-head{background:linear-gradient(100deg,var(--brand),var(--brand-2));color:#fff;padding:22px 24px;display:flex;align-items:center;gap:14px}
+.gate-head img{height:46px;width:auto}
+.gate-head .sep{width:1px;height:36px;background:rgba(255,255,255,.35)}
+.gate-head h1{font-family:var(--font-display);font-size:20px;line-height:1.3;margin:0;font-weight:800}
+.gate-head small{display:block;opacity:.85;font-size:13px;font-family:var(--font-display);font-weight:500;margin-top:2px}
+.gate-body{padding:24px}
+.gate-body p{margin:0 0 16px;color:var(--muted)}
+.gate-body .btn.pri{width:100%;justify-content:center;padding:11px 16px;font-size:16px}
+.gate-foot{padding:12px 24px;border-top:1px solid var(--line);text-align:center;font-size:14px;color:var(--muted)}
+.out-btn svg{display:block}
 </style>
 </head>
 <body>
 
 
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateT">
+  <div class="gate-card">
+    <div class="gate-head"><img src="ksu-logo.png" alt="جامعة الملك سعود" onerror="this.hidden=true;this.nextElementSibling.hidden=true"><span class="sep" aria-hidden="true"></span><div><h1 id="gateT">بوابة مرشحي أفضل 100 جامعة</h1><small>QS 2026 · THE 2026 · ARWU 2026</small></div></div>
+    <div class="gate-body">
+      <p>سجّل الدخول بالحساب المخصص لك للاطلاع على بيانات المرشحين.</p>
+      <form id="gateForm" class="form" style="grid-template-columns:1fr" novalidate>
+        <div class="fld"><label for="gate-email">البريد الإلكتروني</label><input id="gate-email" type="email" autocomplete="username" dir="ltr" required></div>
+        <div class="fld"><label for="gate-pass">كلمة المرور</label><input id="gate-pass" type="password" autocomplete="current-password" dir="ltr" required></div>
+        <button class="btn pri" type="submit" id="gateBtn">دخول</button>
+        <span class="err" id="gateErr" role="alert" aria-live="polite"></span>
+      </form>
+    </div>
+    <div class="gate-foot">إدارة التوظيف · برنامج استقطاب الأساتذة والباحثين المتميزين</div>
+  </div>
+</div>
 <div id="app" dir="rtl" lang="ar">
 <header class="top">
   <div class="wrap">
@@ -324,8 +353,9 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
       <button class="tab" role="tab" data-v="explore" id="t-explore">إحصاءات عامة</button>
       <button class="tab" role="tab" data-v="search" id="t-search">البحث المتقدم</button>
       <button class="tab" role="tab" data-v="universities" id="t-universities">الجامعات</button>
-      <button class="tab" role="tab" data-v="admin" id="t-admin">لوحة التحكم<span class="lock" id="t-admin-lock">· دخول</span></button>
+      <button class="tab" role="tab" data-v="admin" id="t-admin" hidden>لوحة التحكم<span class="lock" id="t-admin-lock">· مسؤول</span></button>
     </nav>
+    <button class="theme-btn out-btn" id="hdrOut" type="button" hidden aria-label="تسجيل الخروج" title="تسجيل الخروج"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg></button>
     <button class="theme-btn" id="themeBtn" type="button" aria-label="التبديل بين الوضع النهاري والليلي" title="الوضع النهاري / الليلي">
       <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/></svg>
       <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>
@@ -464,7 +494,7 @@ td.rk{font-variant-numeric:tabular-nums;text-align:center}
   <main class="wrap">
     <div class="page-head" id="adHead"><div><h2>لوحة التحكم</h2></div>
       <div class="row" id="adTools" hidden><span class="note" id="adWho"></span><button class="btn" id="adBackup">تنزيل نسخة احتياطية</button><button class="btn" id="adOut">تسجيل الخروج</button></div></div>
-    <div class="panel" id="adLogin" style="max-width:460px">
+    <div class="panel" id="adLogin" hidden style="max-width:460px">
       <h3>دخول المسؤول</h3>
       <p class="note">استخدم البريد وكلمة المرور لحساب المسؤول المسجّل في Firebase.</p>
       <form id="lgForm" class="form" style="grid-template-columns:1fr" novalidate>
@@ -1244,6 +1274,7 @@ const XL_MAP={
   gradUniversity:['جامعة التخرج','graduation university','grad university'],
   gradYear:['سنة التخرج','edu completion year','graduation year','completion year','year'],
   linkedin:['linkedin','linkedin profile','رابط linkedin'],
+  rid:['المعرف','معرف المرشح','id','candidate id'],
   email:['البريد الإلكتروني','البريد الالكتروني','البريد','الايميل','الإيميل','email','e-mail','email address','mail'],
   phone:['رقم التواصل','رقم الجوال','الجوال','رقم الهاتف','الهاتف','الموبايل','phone','mobile','phone number','mobile number','contact number','tel'],
   cv:['السيرة الذاتية','رابط السيرة الذاتية','السيرة','cv','resume','cv link','resume link']
@@ -1301,7 +1332,7 @@ async function readExcel(file){
   }
   if(!grid){ toast('لم أجد أعمدة معروفة. استخدم القالب أو تأكد من وجود عمودي الاسم والجامعة.'); return; }
   const sectorField=new Map(); countBy(ALL,'sector').forEach(([s])=>{ const f=countBy(ALL.filter(x=>x.sector===s),'field')[0]?.[0]; if(f) sectorField.set(norm(s),f); });
-  const exist=new Map(ALL.map(x=>[norm(x.name)+'|'+norm(x.university),x])), seen=new Set();
+  const exist=new Map(ALL.map(x=>[norm(x.name)+'|'+norm(x.university),x])), byId=new Map(ALL.map(x=>[x.id,x])), seen=new Set();
   xlRows=[];
   for(let r=hdr+1;r<grid.length;r++){
     const row=grid[r]; const g=k=>map[k]!=null?String(row[map[k]]??'').trim():'';
@@ -1309,7 +1340,7 @@ async function readExcel(file){
     const d={name:g('name'),university:g('university'),country:g('country'),qs:rankOf(g('qs')),the:rankOf(g('the')),arwu:rankOf(g('arwu')),
       field:g('field'),sector:g('sector'),specialization:g('specialization'),level:g('level'),position:g('position'),
       gradUniversity:g('gradUniversity'),gradYear:yearOf(g('gradYear')),linkedin:g('linkedin'),cv:g('cv'),email:g('email'),phone:g('phone')};
-    const notes=[];
+    const rid=g('rid'); const notes=[];
     const ku=d.university?knownUni(d.university):null;
     if(ku){ d.university=ku.name; if(!d.country){d.country=ku.country;notes.push('أُكملت الدولة');} if(d.qs==null&&d.the==null&&d.arwu==null){d.qs=ku.qs;d.the=ku.the;d.arwu=ku.arwu;notes.push('أُكمل الترتيب');} }
     d.field=val(d.field); d.sector=val(d.sector); d.specialization=val(d.specialization);
@@ -1322,8 +1353,9 @@ async function readExcel(file){
     for(const k of ['cv','email','phone','linkedin']) if(/^غير متوفرة? حاليا?ً?$/.test(d[k]))d[k]='';
     { const es=splitMulti(d.email.replace(/mailto:/ig,'')), okE=es.filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)); if(okE.length<es.length)notes.push('حُذف بريد غير صالح'); d.email=okE.join('; '); }
     let st='ok', why='', upd=null;
-    const ex=d.name&&d.university?exist.get(norm(d.name)+'|'+norm(d.university)):null;
-    if(ex){
+    const ex=rid?byId.get(rid):(d.name&&d.university?exist.get(norm(d.name)+'|'+norm(d.university)):null);
+    if(rid&&!ex){ st='bad'; why='المعرف '+rid+' غير موجود في البوابة'; }
+    else if(ex){
       const ch={}, LBL={email:'البريد',phone:'رقم التواصل',linkedin:'LinkedIn',cv:'السيرة الذاتية'};
       for(const k of ['email','phone','linkedin','cv']) if(d[k]&&d[k]!==ex[k])ch[k]=d[k];
       if(Object.keys(ch).length){ st='upd'; upd={id:ex.id,ch}; why='سيُحدَّث: '+Object.keys(ch).map(k=>LBL[k]).join('، '); }
@@ -1444,8 +1476,8 @@ function onData(list){
    Candidates live in a few "shard" documents (shards/s0, s1, …), each holding up to 250
    candidates in an `items` map, so a page load costs a handful of reads (free Spark plan). */
 const SHARD_MAX=250;
-let fdb=null, fauth=null, adminUser=null, shardOf=new Map(), shardSize=new Map(), seeding=false, needResub=false;
-function adminReachable(){ return true; }
+let fdb=null, fauth=null, adminUser=null, isViewer=false, unsub=null, gateMsg='', shardOf=new Map(), shardSize=new Map(), seeding=false;
+function adminReachable(){ return canAdmin; }
 function saveFile(name,data,type){
   const blob=data instanceof Blob?data:new Blob([data],{type:type||'application/octet-stream'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
@@ -1495,25 +1527,32 @@ const store={
   }
 };
 function renderAdminShell(){
-  $('#t-admin').hidden=false;
-  $('#adLogin').hidden=!!adminUser&&canAdmin;
+  $('#t-admin').hidden=!canAdmin;
+  $('#adLogin').hidden=true;
   $('#adTools').hidden=!canAdmin;
   $('#adMain').hidden=!canAdmin;
   $('#adSeed').hidden=!(canAdmin&&loaded&&ALL.length===0);
-  $('#t-admin-lock').textContent=canAdmin?'· مسؤول':'· دخول';
-  $('#lgErr').textContent=adminUser&&!canAdmin?'هذا الحساب ليس مسؤولاً. أضف معرّفه (UID) إلى مجموعة admins في Firestore.':'';
+  $('#t-admin-lock').textContent='· مسؤول';
   if(canAdmin) $('#adWho').textContent=adminUser.email||'';
 }
-$('#lgForm').addEventListener('submit',async e=>{
+/* ---------- sign-in gate: the whole portal needs an authorised account ---------- */
+function showGate(){
+  document.documentElement.classList.add('gated'); $('#gate').hidden=false; $('#hdrOut').hidden=true;
+  $('#gateErr').textContent=gateMsg; gateMsg=''; $('#gateBtn').disabled=false; $('#gateBtn').textContent='دخول';
+  setTimeout(()=>{ const e=$('#gate-email'); if(e&&!e.value)e.focus(); else $('#gate-pass').focus(); },50);
+}
+function hideGate(){ document.documentElement.classList.remove('gated'); $('#gate').hidden=true; $('#hdrOut').hidden=false; $('#gate-pass').value=''; }
+$('#gateForm').addEventListener('submit',async e=>{
   e.preventDefault(); if(!fauth)return;
-  const em=$('#lg-email').value.trim(), pw=$('#lg-pass').value;
-  if(!em||!pw){ $('#lgErr').textContent='أدخل البريد وكلمة المرور.'; return; }
-  $('#lgBtn').disabled=true; $('#lgErr').textContent='';
-  try{ await fauth.signInWithEmailAndPassword(em,pw); $('#lg-pass').value=''; }
-  catch(ex){ $('#lgErr').textContent=/invalid|wrong|not-found|credential/.test(ex.code||'')?'البريد أو كلمة المرور غير صحيحة.':ex.code==='auth/too-many-requests'?'محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.':'تعذر تسجيل الدخول، تحقق من الاتصال.'; }
-  finally{ $('#lgBtn').disabled=false; }
+  const em=$('#gate-email').value.trim(), pw=$('#gate-pass').value;
+  if(!em||!pw){ $('#gateErr').textContent='أدخل البريد الإلكتروني وكلمة المرور.'; return; }
+  $('#gateBtn').disabled=true; $('#gateBtn').textContent='جارٍ الدخول…'; $('#gateErr').textContent='';
+  try{ await fauth.signInWithEmailAndPassword(em,pw); }
+  catch(ex){ $('#gateErr').textContent=/invalid|wrong|not-found|credential|user-disabled/.test(ex.code||'')?'البريد أو كلمة المرور غير صحيحة.':ex.code==='auth/too-many-requests'?'محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.':'تعذر تسجيل الدخول، تحقق من الاتصال.'; $('#gateBtn').disabled=false; $('#gateBtn').textContent='دخول'; }
 });
-$('#adOut').onclick=()=>fauth&&fauth.signOut();
+$('#lgForm').addEventListener('submit',e=>e.preventDefault());
+const signOut=()=>fauth&&fauth.signOut();
+$('#adOut').onclick=signOut; $('#hdrOut').onclick=signOut;
 $('#adBackup').onclick=()=>saveFile(`candidates-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(ALL.map(c=>({id:c.id,...c.raw})),null,1),'application/json');
 $('#adSeedBtn').onclick=async()=>{
   if(seeding||!canAdmin||ALL.length)return; seeding=true; const b=$('#adSeedBtn'); b.disabled=true; b.textContent='جارٍ الاستيراد…';
@@ -1530,31 +1569,41 @@ $('#adSeedBtn').onclick=async()=>{
 };
 $('#srExport').hidden=false;
 show(startView,false);
+function stopData(){
+  if(unsub){ unsub(); unsub=null; }
+  ALL=[]; loaded=false; shardOf=new Map(); shardSize=new Map();
+  setStatus('off','سجّل الدخول لعرض البيانات'); renderEmpty({t:'سجّل الدخول لعرض البيانات',d:'البيانات متاحة للحسابات المصرح لها فقط.'});
+}
 function subscribe(){
-  needResub=false;
-  fdb.collection('shards').onSnapshot(snap=>{
+  if(unsub){ unsub(); unsub=null; }
+  setStatus('off','جارٍ تحميل البيانات');
+  unsub=fdb.collection('shards').onSnapshot(snap=>{
     const list=[]; shardOf=new Map(); shardSize=new Map();
     snap.forEach(doc=>{ const items=(doc.data()||{}).items||{}; const ids=Object.keys(items); shardSize.set(doc.id,ids.length);
       ids.forEach(id=>{ shardOf.set(id,doc.id); list.push(enrich(id,items[id])); }); });
     onData(list.sort((a,b)=>a.id<b.id?-1:1));
     renderAdminShell();
-  },err=>{ needResub=true; setStatus('off','تعذر قراءة البيانات'); renderEmpty({t:'تعذر قراءة البيانات من Firebase',d:err&&err.code==='permission-denied'?'انشر قواعد Firestore من ملف firestore.rules.':'تحقق من الاتصال ثم أعد تحميل الصفحة.'}); });
+  },err=>{ setStatus('off','تعذر قراءة البيانات'); renderEmpty({t:'تعذر قراءة البيانات من Firebase',d:err&&err.code==='permission-denied'?'هذا الحساب لا يملك صلاحية القراءة. أضف معرّفه (UID) إلى مجموعة viewers أو admins، وانشر قواعد Firestore من ملف firestore.rules.':'تحقق من الاتصال ثم أعد تحميل الصفحة.'}); });
 }
 function boot(){
   const cfg=window.FIREBASE_CONFIG;
-  if(typeof firebase==='undefined'){ setStatus('off','تعذر تحميل Firebase'); renderEmpty({t:'تعذر تحميل مكتبة Firebase',d:'تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة.'}); return; }
-  if(!cfg||!cfg.apiKey||/YOUR_/.test(cfg.apiKey)){ setStatus('off','إعداد Firebase غير مكتمل'); renderEmpty({t:'أكمل إعداد Firebase',d:'انسخ إعدادات مشروعك إلى ملف firebase-config.js كما في دليل README.'}); return; }
+  if(typeof firebase==='undefined'){ setStatus('off','تعذر تحميل Firebase'); renderEmpty({t:'تعذر تحميل مكتبة Firebase',d:'تحقق من اتصال الإنترنت ثم أعد تحميل الصفحة.'}); $('#gateErr').textContent='تعذر تحميل مكتبة Firebase. تحقق من الاتصال.'; return; }
+  if(!cfg||!cfg.apiKey||/YOUR_/.test(cfg.apiKey)){ setStatus('off','إعداد Firebase غير مكتمل'); $('#gateErr').textContent='إعداد Firebase غير مكتمل (firebase-config.js).'; return; }
   firebase.initializeApp(cfg);
   fdb=firebase.firestore(); fauth=firebase.auth();
-  fdb.enablePersistence({synchronizeTabs:true}).catch(()=>{});
   fauth.onAuthStateChanged(async u=>{
-    adminUser=u; canAdmin=false;
-    if(u){ try{ canAdmin=(await fdb.collection('admins').doc(u.uid).get()).exists; }catch(e){ canAdmin=false; } }
-    renderAdminShell(); if(current==='admin') renderCurrent();
-    if(u&&needResub) subscribe();
+    adminUser=u; canAdmin=false; isViewer=false;
+    if(!u){ stopData(); renderAdminShell(); if(current==='admin')show('overview'); showGate(); return; }
+    try{
+      const [a,v]=await Promise.all([fdb.collection('admins').doc(u.uid).get(),fdb.collection('viewers').doc(u.uid).get()]);
+      canAdmin=a.exists; isViewer=v.exists;
+    }catch(e){ canAdmin=false; isViewer=false; }
+    if(!canAdmin&&!isViewer){ gateMsg='هذا الحساب غير مصرح له بالدخول إلى البوابة.'; await fauth.signOut(); return; }
+    hideGate(); renderAdminShell(); subscribe();
+    if(startView==='admin'&&canAdmin&&current!=='admin') show('admin',false); else renderCurrent();
   });
-  subscribe();
 }
+stopData(); showGate();
 boot();
 /* ===================== END PLATFORM ===================== */
 })();
