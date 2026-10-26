@@ -611,7 +611,8 @@ const fieldColor=f=>{const i=FIELDS.indexOf(f);return i<0?'--muted':FIELD_VAR[i]
 const cleanName=n=>String(n||'').replace(/\b(dr|prof|professor|mr|mrs|ms|engr|eng)\b\.?/gi,' ').replace(/\s+/g,' ').trim();
 const liSearch=(name,uni)=>'https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent((cleanName(name)+' '+(uni||'')).trim());
 const CV_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>';
-const cvHref=v=>{ v=String(v||'').trim(); if(!v)return ''; if(/^https?:\/\//i.test(v))return v;
+const cvValid=v=>{ v=String(v||'').trim(); return /^https?:\/\//i.test(v)||/^(www\.|1drv\.ms|[\w-]+\.(sharepoint\.com|onedrive\.live\.com|live\.com))/i.test(v)||/^cv\/[^\s]+\.\w{2,5}$/i.test(v); };
+const cvHref=v=>{ v=String(v||'').trim(); if(!v||!cvValid(v))return ''; if(/^https?:\/\//i.test(v))return v;
   if(/^(www\.|1drv\.ms|[\w-]+\.(sharepoint\.com|onedrive\.live\.com|live\.com))/i.test(v))return 'https://'+v;
   try{ return new URL(v.replace(/^\/+/,''),location.href).href; }catch(e){ return v; } };
 const telHref=v=>{ const d=String(v||'').replace(/[^\d+]/g,''); return d?'tel:'+d:''; };
@@ -637,7 +638,7 @@ function enrich(id,d){
   const o={id,name:val(d.name),university:val(d.university),country:val(d.country),specialization:val(d.specialization),
     level:LEVELS.includes(lvl)?lvl:'',sector:val(d.sector),field:FIELDS.includes(fld)?fld:'',qs:r[0],the:r[1],arwu:r[2],
     position:d.position||'',department:d.department||'',gradUniversity:d.gradUniversity||'',gradYear:d.gradYear||null,
-    linkedin:d.linkedin||'',cv:d.cv||'',email:String(d.email||'').trim(),phone:String(d.phone||'').trim(),createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
+    linkedin:d.linkedin||'',cv:cvValid(d.cv)?String(d.cv).trim():'',email:String(d.email||'').trim(),phone:String(d.phone||'').trim(),createdAt:d.createdAt||0,best,tier,nr:valid.length,raw:d};
   o.region=REGION_OF[o.country]||'';
   o._t=norm([o.name,o.university,o.country,o.specialization,o.sector,o.department,o.position,o.gradUniversity,o.field,o.email,o.phone].join(' '));
   return o;
@@ -1321,7 +1322,7 @@ async function readExcel(file){
   for(const sn of wb.SheetNames){
     if(norm(sn)==='تعليمات')continue;
     const wsh=wb.Sheets[sn], g=XLSX.utils.sheet_to_json(wsh,{header:1,defval:'',blankrows:true,range:0});
-    for(const addr in wsh){ if(addr[0]==='!'||!wsh[addr].l||!wsh[addr].l.Target||!/^(linkedin|فتح linkedin|تحميل السيرة الذاتية|تحميل)$/i.test(String(wsh[addr].v||'').trim()))continue; const rc=XLSX.utils.decode_cell(addr), rr=rc.r-XLSX.utils.decode_range(wsh['!ref']).s.r;
+    for(const addr in wsh){ if(addr[0]==='!'||!wsh[addr].l||!wsh[addr].l.Target||!/^https?:\/\//i.test(String(wsh[addr].l.Target).trim()))continue; const rc=XLSX.utils.decode_cell(addr), rr=rc.r-XLSX.utils.decode_range(wsh['!ref']).s.r;
       if(g[rr]) { let tg=String(wsh[addr].l.Target); const mm=tg.match(/go\.html\?to=([^&#]+)/); if(mm){ try{tg=decodeURIComponent(mm[1]);}catch(e){} } g[rr][rc.c-XLSX.utils.decode_range(wsh['!ref']).s.c]=tg.replace(/^mailto:/i,'').split(',').join('; '); } }
     for(let r=0;r<Math.min(10,g.length);r++){
       const mm={}; let hits=0;
@@ -1351,6 +1352,8 @@ async function readExcel(file){
     if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.cv))d.cv='';
     if(/^(تحميل السيرة الذاتية|فتح linkedin)$/i.test(d.linkedin))d.linkedin='';
     for(const k of ['cv','email','phone','linkedin']) if(/^غير متوفرة? حاليا?ً?$/.test(d[k]))d[k]='';
+    if(d.cv&&!cvValid(d.cv)){ notes.push('رابط السيرة غير صالح: انسخ الرابط من OneDrive (يبدأ بـ https)'); d.cv=''; }
+    if(d.linkedin&&!/linkedin\.com/i.test(d.linkedin)){ notes.push('رابط LinkedIn غير صالح'); d.linkedin=''; }
     { const es=splitMulti(d.email.replace(/mailto:/ig,'')), okE=es.filter(e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)); if(okE.length<es.length)notes.push('حُذف بريد غير صالح'); d.email=okE.join('; '); }
     let st='ok', why='', upd=null;
     const ex=rid?byId.get(rid):(d.name&&d.university?exist.get(norm(d.name)+'|'+norm(d.university)):null);
